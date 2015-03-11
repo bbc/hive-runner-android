@@ -8,5 +8,5 @@ Gem::Specification.new do |s|
   s.email	= 'jon.wilson01@bbc.co.uk' 
   s.files 	= Dir['README.md', 'lib/**/*.rb']
   s.homepage  	= 'https://github.com/bbc-test/hive-runner-android'
-  s.license	= 'Apache2'
+  s.license	= 'MIT'
 end
