@@ -1,7 +1,6 @@
 require 'hive/controller'
 require 'hive/worker/android'
 require 'device_api/android'
-require 'pry'
 
 module Hive
   class Controller
