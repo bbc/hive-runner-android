@@ -11,6 +11,12 @@ module Hive
 
         devices = DeviceAPI::Android.devices
 
+        if devices.empty?
+          # No devices have been detected, log and return
+          Hive.logger.debug('No devices attached')
+          puts 'No devices attached'
+          return []
+        end
         # Register the attached devices
         registered_devices = []
         devices.each do |device|

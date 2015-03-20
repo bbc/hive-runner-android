@@ -2,46 +2,53 @@ require 'hive/worker'
 require 'hive/messages/android_job'
 
 module Hive
+  class PortReserver
+    attr_accessor :ports
+    def initialize
+      self.ports = {}
+    end
+
+    def reserve(queue_name: 'default')
+      self.ports[queue_name] = Hive.data_store.port.assign("#{queue_name}")
+      #@log.info("#{queue_name} port: #{@ports[queue_name]}")
+      self.ports[queue_name]
+    end
+  end
+
   class Worker
     class Android < Worker
 
+      attr_accessor :device
+
       def initialize(device)
+        @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
         #@log.info("ADB server port: #{@adb_server_port}")
-        binding.pry
+        self.device = device
         super(device)
       end
 
       def pre_script(job, job_paths, script)
-        binding.pry
         script.set_env "TEST_SERVER_PORT", @adb_server_port
 
-        @charles_port = Hive.data_store.port.assign("#{device['name']} - charles")
-        @log.info("Charles port: #{@charles_port}")
-        script.set_env "CHARLES_PROXY_PORT", @charles_port
+        script.set_env "CHARLES_PROXY_PORT",  @ports.reserve(queue_name: 'Charles')
+        script.set_env "APPIUM_PORT",         @ports.reserve(queue_name: 'Appium')
+        script.set_env "BOOTSTRAP_PORT",      @ports.reserve(queue_name: 'Bootstrap')
+        script.set_env "CHROMEDRIVER_PORT",   @ports.reserve(queue_name: 'Chromedriver')
 
-        @appium_port = Hive.data_store.port.assign("#{device['name']} - appium")
-        @log.info("Appium port: #{@appium_port}")
-        script.set_env "APPIUM_PORT", @appium_port
+        script.set_env 'QUEUE_NAME', job.execution_variables.queue_name
+        script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
-        @bootstrap_port = Hive.data_store.port.assign("#{device['name']} - bootstrap")
-        @log.info("Bootstrap port: #{@bootstrap_port}")
-        script.set_env "BOOTSTRAP_PORT", @bootstrap_port
+        FileUtils.mkdir(job_paths.home_path + '/build')
+        apk_path = job_paths.home_path + '/build/' + 'build.apk'
 
-        @chromedriver_port = Hive.data_store.port.assign("#{device['name']} - chromedriver")
-        @log.info("Chromedriver port: #{@chromedriver_port}")
-        script.set_env "CHROMEDRIVER_PORT", @chromedriver_port
-
-        script.set_env 'QUEUE_NAME', self.device.queue
-
-        fetch_build(job.build, apk_path) if job.build
+        script.set_env "APK_PATH", apk_path
+        script.fetch_build(job.build, apk_path) if job.build
 
         # add a step to resign the build, usually needed
         script.append_bash_cmd "calabash-android resign #{apk_path}" if job.build
 
-        script.append_bash_cmd job.command
-
-        "#{self.device.serial_number} #{@appium_port} #{apk_path} #{job_paths.results_path}"
+        "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{job_paths.results_path}"
       end
 
       def job_message_klass
@@ -50,8 +57,8 @@ module Hive
 
       def post_script(job, job_paths, script)
         @log.info('Post script')
-        [@charles_port, @appium_port, @bootstrap_port, @chromedriver_port].each do |p|
-          Hive.data_store.port.release(p)
+        @ports.ports.each do |name, port|
+          Hive.data_store.port.release(port)
         end
       end
 
