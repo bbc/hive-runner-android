@@ -10,7 +10,6 @@ module Hive
 
     def reserve(queue_name: 'default')
       self.ports[queue_name] = Hive.data_store.port.assign("#{queue_name}")
-      #@log.info("#{queue_name} port: #{@ports[queue_name]}")
       self.ports[queue_name]
     end
   end
@@ -23,7 +22,6 @@ module Hive
       def initialize(device)
         @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
-        #@log.info("ADB server port: #{@adb_server_port}")
         self.device = device
         super(device)
       end
@@ -31,6 +29,7 @@ module Hive
       def pre_script(job, file_system, script)
         script.set_env "TEST_SERVER_PORT", @adb_server_port
 
+        # TODO: Allow the scheduler to specify the ports to use
         script.set_env "CHARLES_PROXY_PORT",  @ports.reserve(queue_name: 'Charles')
         script.set_env "APPIUM_PORT",         @ports.reserve(queue_name: 'Appium')
         script.set_env "BOOTSTRAP_PORT",      @ports.reserve(queue_name: 'Bootstrap')
@@ -45,7 +44,7 @@ module Hive
         script.set_env "APK_PATH", apk_path
         file_system.fetch_build(job.build, apk_path) if job.build
 
-        # add a step to resign the build, usually needed
+        # Prepend a step to resign the build, usually needed
         script.prepend_bash_cmd "calabash-android resign #{apk_path}" if job.build
 
         "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
