@@ -28,7 +28,7 @@ module Hive
         super(device)
       end
 
-      def pre_script(job, job_paths, script)
+      def pre_script(job, file_system, script)
         script.set_env "TEST_SERVER_PORT", @adb_server_port
 
         script.set_env "CHARLES_PROXY_PORT",  @ports.reserve(queue_name: 'Charles')
@@ -39,23 +39,23 @@ module Hive
         script.set_env 'QUEUE_NAME', job.execution_variables.queue_name
         script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
-        FileUtils.mkdir(job_paths.home_path + '/build')
-        apk_path = job_paths.home_path + '/build/' + 'build.apk'
+        FileUtils.mkdir(file_system.home_path + '/build')
+        apk_path = file_system.home_path + '/build/' + 'build.apk'
 
         script.set_env "APK_PATH", apk_path
-        script.fetch_build(job.build, apk_path) if job.build
+        file_system.fetch_build(job.build, apk_path) if job.build
 
         # add a step to resign the build, usually needed
-        script.append_bash_cmd "calabash-android resign #{apk_path}" if job.build
+        script.prepend_bash_cmd "calabash-android resign #{apk_path}" if job.build
 
-        "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{job_paths.results_path}"
+        "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
 
       def job_message_klass
         Hive::Messages::AndroidJob
       end
 
-      def post_script(job, job_paths, script)
+      def post_script(job, file_system, script)
         @log.info('Post script')
         @ports.ports.each do |name, port|
           Hive.data_store.port.release(port)
@@ -65,6 +65,12 @@ module Hive
       def device_status
         details = Hive.devicedb('Device').find(@options['id'])
         @log.info("Device details: #{details.inspect}")
+        details['status']
+      end
+
+      def set_device_status(status)
+        @log.debug("Setting status of device to '#{status}'")
+        details = Hive.devicedb('Device').poll(@options['id'], status)
         details['status']
       end
     end
