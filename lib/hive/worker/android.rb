@@ -8,7 +8,7 @@ module Hive
       self.ports = {}
     end
 
-    def reserve(queue_name: 'default')
+    def reserve(queue_name)
       self.ports[queue_name] = Hive.data_store.port.assign("#{queue_name}")
       self.ports[queue_name]
     end
@@ -27,6 +27,7 @@ module Hive
       end
 
       def pre_script(job, file_system, script)
+        Hive.devicedb('Device').poll(@options['id'], 'busy')
         script.set_env "TEST_SERVER_PORT", @adb_server_port
 
         # TODO: Allow the scheduler to specify the ports to use
@@ -59,6 +60,7 @@ module Hive
         @ports.ports.each do |name, port|
           Hive.data_store.port.release(port)
         end
+        Hive.devicedb('Device').poll(@options['id'], 'idle')
       end
 
       def device_status

@@ -21,7 +21,6 @@ module Hive
         devices.each do |device|
           begin
           Hive.logger.debug("Found Android device: #{device.model}")
-          puts "Android device #{device.model} found - adding to Hive"
 
           attributes = {
               os: 'android',
@@ -41,6 +40,16 @@ module Hive
           registered_devices << Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
         end
 
+        rows = registered_devices.map do |device|
+          [
+              "#{device['device_brand']} #{device['device_model']}",
+              device['serial'],
+              (device['device_queues'].map { |queue| queue['name']}).join("\n"),
+              device['status']
+          ]
+        end
+        table = Terminal::Table.new :headings => ['Device', 'Serial', 'Queue Name', 'Status'], :rows => rows
+        puts table
         hive_details = Hive.devicedb('Hive').find(Hive.id)
 
         if hive_details.key?('devices')
@@ -55,9 +64,11 @@ module Hive
           hive_details['devices'].collect do |device|
             Hive.logger.debug("Found Android device #{device}")
             device['queues'] = device['device_queues'].collect do |queue_details|
-              puts "Queue: #{queue_details['name']}"
               queue_details['name']
             end
+
+
+            # Hive.create_object(@device_class).new(@config.merge(device))
             Object.const_get(@device_class).new(@config.merge(device))
           end
         else
