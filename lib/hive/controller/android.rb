@@ -40,13 +40,17 @@ module Hive
           registered_devices << Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
         end
 
-        rows = registered_devices.map do |device|
-          [
-              "#{device['device_brand']} #{device['device_model']}",
-              device['serial'],
-              (device['device_queues'].map { |queue| queue['name']}).join("\n"),
-              device['status']
-          ]
+        rows = []
+
+        unless registered_devices.nil?
+          rows = registered_devices.map do |device|
+            [
+                "#{device['device_brand']} #{device['device_model']}",
+                device['serial'],
+                (device['device_queues'].map { |queue| queue['name']}).join("\n"),
+                device['status']
+            ]
+          end
         end
         table = Terminal::Table.new :headings => ['Device', 'Serial', 'Queue Name', 'Status'], :rows => rows
         puts table
@@ -68,7 +72,7 @@ module Hive
             end
 
 
-            # Hive.create_object(@device_class).new(@config.merge(device))
+            #Hive.create_object(@device_class).new(@config.merge(device))
             Object.const_get(@device_class).new(@config.merge(device))
           end
         else
