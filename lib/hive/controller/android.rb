@@ -9,6 +9,20 @@ module Hive
       # 6 hours = 6*60*60 seconds
       TIME_BEFORE_REBOOT = 21600
 
+      def reboot_if_required(serial)
+        if DeviceAPI::Android::ADB.get_uptime(serial) > (@config['time_before_reboot'] || TIME_BEFORE_REBOOT)
+          DeviceAPI::Android::ADB.reboot(serial)
+        end
+      end
+
+      def calculate_queue_name
+
+      end
+
+      def calculate_device_name(device)
+        "mobile-#{device.manufacturer}-#{device.model}"
+      end
+
       def detect
         Hive.devicedb('Hive').poll(Hive.id)
         devices = DeviceAPI::Android.devices
@@ -30,9 +44,8 @@ module Hive
             # A previously registered device is attached, poll it
             puts "Polling attached device - #{device}"
             Hive.devicedb('Device').poll(device['id'])
-            if DeviceAPI::Android::ADB.get_uptime(device['serial']) > (@config['time_before_reboot'] || TIME_BEFORE_REBOOT)
-              DeviceAPI::Android::ADB.reboot(device['serial'])
-            end
+            reboot_if_required(device['serial'])
+
             devices = devices - registered_device
           end
         end
@@ -49,7 +62,8 @@ module Hive
                 device_type: 'mobile',
                 device_model: device.model,
                 device_brand: device.manufacturer,
-                device_range: device.range,
+                device_range: device.model, #device.range,
+                name: calculate_device_name(device),
                 hive: Hive.id
             }
 
@@ -58,6 +72,7 @@ module Hive
             # gem will throw an error
             Hive.logger.debug('Device disconnected while attempting to add')
           end
+
           registration = Hive.devicedb('Device').register(attributes)
           Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
         end
