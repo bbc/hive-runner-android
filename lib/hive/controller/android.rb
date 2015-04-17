@@ -20,11 +20,13 @@ module Hive
       end
 
       def calculate_device_name(device)
-        "mobile-#{device.manufacturer}-#{device.model}"
+        "mobile-#{device.manufacturer}-#{device.model}".gsub(' ', '_').downcase
       end
 
       def detect
+        puts "#{Time.now} Polling hive: #{Hive.id}"
         Hive.devicedb('Hive').poll(Hive.id)
+        puts "#{Time.now} Finished polling hive: #{Hive.id}"
         devices = DeviceAPI::Android.devices
 
         if devices.empty?
@@ -32,18 +34,21 @@ module Hive
           puts 'No devices attached'
         end
 
+        puts "#{Time.now} Retrieving hive details"
         hive_details = Hive.devicedb('Hive').find(Hive.id)
+        puts "#{Time.now} Finished fetching hive details"
 
-        hive_details['devices'].each do |device|
-          registered_device = devices.select { |a| a.serial == device['serial'] }
+        hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
+          registered_device = devices.select { |a| a.serial == device['serial']}
           if registered_device.empty?
             # A previously registered device isn't attached
             puts "Removing previously registered device - #{device}"
             Hive.devicedb('Device').hive_disconnect(device['id'])
           else
             # A previously registered device is attached, poll it
-            puts "Polling attached device - #{device}"
+            puts "#{Time.now} Polling attached device - #{device}"
             Hive.devicedb('Device').poll(device['id'])
+            puts "#{Time.now} Finished polling device"
             reboot_if_required(device['serial'])
 
             devices = devices - registered_device

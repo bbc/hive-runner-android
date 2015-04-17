@@ -45,8 +45,9 @@ module Hive
         script.set_env "APK_PATH", apk_path
         file_system.fetch_build(job.build, apk_path) if job.build
 
-        # Prepend a step to resign the build, usually needed
-        script.prepend_bash_cmd "calabash-android resign #{apk_path}" if job.build
+        keystore = @config['keystore'] || 'hive.keystore'
+        DeviceAPI::Android::ADB.generate_keystore(key_store: keystore)
+        DeviceAPI::Android::ADB.sign_apk({apk: apk_path, keystore: keystore})
 
         "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
