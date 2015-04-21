@@ -45,9 +45,9 @@ module Hive
         script.set_env "APK_PATH", apk_path
         file_system.fetch_build(job.build, apk_path) if job.build
 
-        keystore = @config['keystore'] || 'hive.keystore'
-        DeviceAPI::Android::ADB.generate_keystore(key_store: keystore)
-        DeviceAPI::Android::ADB.sign_apk({apk: apk_path, keystore: keystore})
+        keystore = @options['keystore'] || 'hive.keystore'
+        #DeviceAPI::Android::Signing.generate_keystore(keystore: keystore)
+        #DeviceAPI::Android::Signing.sign_apk({apk: apk_path, keystore: keystore})
 
         "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
