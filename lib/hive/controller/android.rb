@@ -100,7 +100,7 @@ module Hive
         puts table
 
         if hive_details.key?('devices')
-          hive_details['devices'].collect do |device|
+          hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |device|
             #Hive.create_object(@device_class).new(@config.merge(device))
             Object.const_get(@device_class).new(@config.merge(device))
           end
