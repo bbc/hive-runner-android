@@ -15,12 +15,59 @@ module Hive
         end
       end
 
-      def calculate_queue_name
+      def calculate_queue_names(device)
+        queues = [
+                    device['device_model'],
+                    device['device_brand'],
+                    device['os'],
+                    "#{device['os']}-#{device['os_version']}"
+                 ]
 
+        queues << device["features"] unless device["features"].empty?
+
+        queues.flatten
       end
 
       def calculate_device_name(device)
         "mobile-#{device.manufacturer}-#{device.model}".gsub(' ', '_').downcase
+      end
+
+      def populate_queues(device)
+        queues = calculate_queue_names(device)
+
+        # Check to see if the queues have already been registered with this device
+        missing_queues = device['device_queues'].map { |d| d['name'] } - queues
+        return if missing_queues.empty?
+
+        queue_ids = []
+        queues.each do |queue|
+          queue_ids << find_or_create_queue(queue)
+        end
+
+        values = {
+            name: device['name'],
+            hive_id: device['hive_id'],
+            feature_list: device['features'],
+            device_queue_ids: queue_ids
+        }
+
+        Hive.devicedb('Device').edit(device['id'], values)
+      end
+
+      def find_or_create_queue(name)
+        queue = Hive.devicedb('Queue').find_by_name(name)
+        return queue.first['id'] unless queue.empty?
+
+        create_queue(name, "#{name} queue created by Hive Runner")['id']
+      end
+
+      def create_queue(name, description)
+        queue_attributes = {
+            name: name,
+            description: description
+        }
+
+        Hive.devicedb('Queue').register(device_queue: queue_attributes )
       end
 
       def detect
@@ -38,50 +85,71 @@ module Hive
         hive_details = Hive.devicedb('Hive').find(Hive.id)
         puts "#{Time.now} Finished fetching hive details"
 
-        hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
-          registered_device = devices.select { |a| a.serial == device['serial']}
-          if registered_device.empty?
-            # A previously registered device isn't attached
-            puts "Removing previously registered device - #{device}"
-            Hive.devicedb('Device').hive_disconnect(device['id'])
-          else
-            # A previously registered device is attached, poll it
-            puts "#{Time.now} Polling attached device - #{device}"
-            Hive.devicedb('Device').poll(device['id'])
-            puts "#{Time.now} Finished polling device"
-            reboot_if_required(device['serial'])
+        unless hive_details['devices'].empty?
+          hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
+            registered_device = devices.select { |a| a.serial == device['serial']}
+            if registered_device.empty?
+              # A previously registered device isn't attached
+              puts "Removing previously registered device - #{device}"
+              Hive.devicedb('Device').hive_disconnect(device['id'])
+            else
+              # A previously registered device is attached, poll it
+              puts "#{Time.now} Polling attached device - #{device}"
+              Hive.devicedb('Device').poll(device['id'])
+              puts "#{Time.now} Finished polling device"
+              reboot_if_required(device['serial'])
 
-            devices = devices - registered_device
+              # Make sure that this device has all the queues it should have
+              populate_queues(device)
+
+              devices = devices - registered_device
+            end
           end
         end
 
         devices.each do |device|
-          begin
-            puts "Adding new Android device: #{device.model}"
-            Hive.logger.debug("Adding new Android device: #{device.model}")
-
-            attributes = {
-                os: 'android',
-                os_version: device.version,
-                serial: device.serial,
-                device_type: 'mobile',
-                device_model: device.model,
-                device_brand: device.manufacturer,
-                device_range: device.model, #device.range,
-                name: calculate_device_name(device),
-                hive: Hive.id
-            }
-
-          rescue DeviceAPI::Android::ADBCommandError
-            # If a device has been disconnected while we're trying to add it, the device_api
-            # gem will throw an error
-            Hive.logger.debug('Device disconnected while attempting to add')
-          end
-
-          registration = Hive.devicedb('Device').register(attributes)
-          Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
+          register_new_device(device)
         end
 
+        display_devices
+
+        if hive_details.key?('devices')
+          hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |device|
+            #Hive.create_object(@device_class).new(@config.merge(device))
+            Object.const_get(@device_class).new(@config.merge(device))
+          end
+        else
+          []
+        end
+      end
+
+      def register_new_device(device)
+        begin
+          puts "Adding new Android device: #{device.model}"
+          Hive.logger.debug("Adding new Android device: #{device.model}")
+
+          attributes = {
+              os: 'android',
+              os_version: device.version,
+              serial: device.serial,
+              device_type: 'mobile',
+              device_model: device.model,
+              device_brand: device.manufacturer,
+              device_range: device.range,
+              name: calculate_device_name(device),
+              hive: Hive.id
+          }
+        rescue DeviceAPI::Android::ADBCommandError
+          # If a device has been disconnected while we're trying to add it, the device_api
+          # gem will throw an error
+          Hive.logger.debug('Device disconnected while attempting to add')
+        end
+
+        registration = Hive.devicedb('Device').register(attributes)
+        Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
+      end
+
+      def display_devices
         rows = []
 
         hive_details = Hive.devicedb('Hive').find(Hive.id)
@@ -98,15 +166,6 @@ module Hive
         table = Terminal::Table.new :headings => ['Device', 'Serial', 'Queue Name', 'Status'], :rows => rows
 
         puts table
-
-        if hive_details.key?('devices')
-          hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |device|
-            #Hive.create_object(@device_class).new(@config.merge(device))
-            Object.const_get(@device_class).new(@config.merge(device))
-          end
-        else
-          []
-        end
       end
     end
   end
