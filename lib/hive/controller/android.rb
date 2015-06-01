@@ -71,32 +71,31 @@ module Hive
       end
 
       def detect
-        puts "#{Time.now} Polling hive: #{Hive.id}"
+        Hive.logger.debug("#{Time.now} Polling hive: #{Hive.id}")
         Hive.devicedb('Hive').poll(Hive.id)
-        puts "#{Time.now} Finished polling hive: #{Hive.id}"
+        Hive.logger.debug("#{Time.now} Finished polling hive: #{Hive.id}")
         devices = DeviceAPI::Android.devices
 
         if devices.empty?
           Hive.logger.debug('No devices attached')
-          puts 'No devices attached'
         end
 
-        puts "#{Time.now} Retrieving hive details"
+        Hive.logger.debug("#{Time.now} Retrieving hive details")
         hive_details = Hive.devicedb('Hive').find(Hive.id)
-        puts "#{Time.now} Finished fetching hive details"
+        Hive.logger.debug("#{Time.now} Finished fetching hive details")
 
         unless hive_details['devices'].empty?
           hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
             registered_device = devices.select { |a| a.serial == device['serial']}
             if registered_device.empty?
               # A previously registered device isn't attached
-              puts "Removing previously registered device - #{device}"
+              Hive.logger.debug("Removing previously registered device - #{device}")
               Hive.devicedb('Device').hive_disconnect(device['id'])
             else
               # A previously registered device is attached, poll it
-              puts "#{Time.now} Polling attached device - #{device}"
+              Hive.logger.debug("#{Time.now} Polling attached device - #{device}")
               Hive.devicedb('Device').poll(device['id'])
-              puts "#{Time.now} Finished polling device"
+              Hive.logger.debug("#{Time.now} Finished polling device")
               reboot_if_required(device['serial'])
 
               # Make sure that this device has all the queues it should have
@@ -125,7 +124,6 @@ module Hive
 
       def register_new_device(device)
         begin
-          puts "Adding new Android device: #{device.model}"
           Hive.logger.debug("Adding new Android device: #{device.model}")
 
           attributes = {
