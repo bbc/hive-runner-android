@@ -36,7 +36,7 @@ module Hive
         queues = calculate_queue_names(device)
 
         # Check to see if the queues have already been registered with this device
-        missing_queues = device['device_queues'].map { |d| d['name'] } - queues
+        missing_queues = queues - device['device_queues'].map { |d| d['name'] }
         return if missing_queues.empty?
 
         queue_ids = []
