@@ -20,7 +20,8 @@ module Hive
                     device['device_model'],
                     device['device_brand'],
                     device['os'],
-                    "#{device['os']}-#{device['os_version']}"
+                    "#{device['os']}-#{device['os_version']}",
+                    "#{device['os']}-#{device['os_version']}-#{device['device_model']}"
                  ]
 
         queues << device["features"] unless device["features"].empty?
@@ -35,12 +36,14 @@ module Hive
       def populate_queues(device)
         queues = calculate_queue_names(device)
 
+        devicedb_queues = device['device_queues'].map { |d| d['name'] }
         # Check to see if the queues have already been registered with this device
-        missing_queues = queues - device['device_queues'].map { |d| d['name'] }
+        missing_queues = (queues - devicedb_queues) + (devicedb_queues - queues)
         return if missing_queues.empty?
 
         queue_ids = []
-        queues.each do |queue|
+        queues << missing_queues
+        queues.flatten.uniq.each do |queue|
           queue_ids << find_or_create_queue(queue)
         end
 
@@ -83,6 +86,11 @@ module Hive
         Hive.logger.debug("#{Time.now} Retrieving hive details")
         hive_details = Hive.devicedb('Hive').find(Hive.id)
         Hive.logger.debug("#{Time.now} Finished fetching hive details")
+
+        unless hive_details.key?('devices')
+          Hive.logger.debug('Could not connect to DeviceDB at this time')
+          return []
+        end
 
         unless hive_details['devices'].empty?
           hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
