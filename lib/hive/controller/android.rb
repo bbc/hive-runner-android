@@ -41,11 +41,9 @@ module Hive
         missing_queues = (queues - devicedb_queues) + (devicedb_queues - queues)
         return if missing_queues.empty?
 
-        queue_ids = []
         queues << missing_queues
-        queues.flatten.uniq.each do |queue|
-          queue_ids << find_or_create_queue(queue)
-        end
+
+        queue_ids = queues.flatten.uniq.map { |queue| find_or_create_queue(queue) }
 
         values = {
             name: device['name'],
@@ -79,10 +77,7 @@ module Hive
         Hive.logger.debug("#{Time.now} Finished polling hive: #{Hive.id}")
         devices = DeviceAPI::Android.devices
 
-        if devices.empty?
-          Hive.logger.debug('No devices attached')
-        end
-
+        Hive.logger.debug('No devices attached') if devices.empty?
         Hive.logger.debug("#{Time.now} Retrieving hive details")
         hive_details = Hive.devicedb('Hive').find(Hive.id)
         Hive.logger.debug("#{Time.now} Finished fetching hive details")
