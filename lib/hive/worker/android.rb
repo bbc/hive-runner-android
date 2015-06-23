@@ -36,7 +36,6 @@ module Hive
         script.set_env "BOOTSTRAP_PORT",      @ports.reserve(queue_name: 'Bootstrap')
         script.set_env "CHROMEDRIVER_PORT",   @ports.reserve(queue_name: 'Chromedriver')
 
-        script.set_env 'QUEUE_NAME', job.execution_variables.queue_name
         script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
         FileUtils.mkdir(file_system.home_path + '/build')

@@ -72,9 +72,6 @@ module Hive
       end
 
       def detect
-        Hive.logger.debug("#{Time.now} Polling hive: #{Hive.id}")
-        Hive.devicedb('Hive').poll(Hive.id)
-        Hive.logger.debug("#{Time.now} Finished polling hive: #{Hive.id}")
         devices = DeviceAPI::Android.devices
 
         Hive.logger.debug('No devices attached') if devices.empty?
@@ -117,7 +114,6 @@ module Hive
 
         if hive_details.key?('devices')
           hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |device|
-            #Hive.create_object(@device_class).new(@config.merge(device))
             Object.const_get(@device_class).new(@config.merge(device))
           end
         else
@@ -166,7 +162,7 @@ module Hive
         end
         table = Terminal::Table.new :headings => ['Device', 'Serial', 'Queue Name', 'Status'], :rows => rows
 
-        puts table
+        Hive.logger.info(table)
       end
     end
   end
