@@ -4,13 +4,14 @@ module Hive
 		class Android
 			class Wifi < Diagnostic
 				def check_wifi
-      			# Should check using device_api-android
       				begin
       					status = DeviceAPI::Android::ADB.wifi(@options['serial'])[:status].scan(/^[^\/]*/)[0]
 						wifi = DeviceAPI::Android::ADB.wifi(@options['serial'])[:wifi]
+						message = status == "CONNECTED" ? "#{status} to #{wifi}" : "Disconnected from wifi: #{wifi}" 
+						record_result("wifi", status, message)
 						Hive.logger.info("Wifi: #{wifi} \t Status: #{status}")
-						rescue DiagnosticFailed => e
-        		    	@log.info("#{e.message}\n");
+					rescue DiagnosticFailed => e
+							 @log.info("#{e.message}\n");
 					end
 				#record_result(status,message)
     		  	end
