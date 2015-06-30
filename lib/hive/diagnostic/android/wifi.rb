@@ -12,8 +12,8 @@ module Hive
 
 				def check_wifi
 					begin
-      					wifi_status
-      					if @status.capitalize == @criteria then
+						wifi_status
+						if @status.capitalize == @criteria then
 							@message = "#{@status} to #{@wifi}"
 							Hive.logger.info("Wifi: #{@wifi} \t Status: #{@status}") 
 						else
