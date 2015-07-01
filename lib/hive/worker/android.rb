@@ -44,7 +44,7 @@ module Hive
         script.set_env "APK_PATH", apk_path
         file_system.fetch_build(job.build, apk_path) if job.build
 
-        DeviceAPI::Android::Signing.sign_apk({apk: apk_path, resign: true})
+        DeviceAPI::Android::Signing.sign_apk({apk: apk_path, resign: false})
 
         "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end

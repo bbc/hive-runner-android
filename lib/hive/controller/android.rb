@@ -29,10 +29,6 @@ module Hive
         queues.flatten
       end
 
-      def calculate_device_name(device)
-        "mobile-#{device.manufacturer}-#{device.model}".gsub(' ', '_').downcase
-      end
-
       def populate_queues(device)
         queues = calculate_queue_names(device)
 
@@ -133,7 +129,6 @@ module Hive
               device_model: device.model,
               device_brand: device.manufacturer,
               device_range: device.range,
-              name: calculate_device_name(device),
               hive: Hive.id
           }
         rescue DeviceAPI::Android::ADBCommandError
