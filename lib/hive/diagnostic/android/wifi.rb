@@ -5,6 +5,15 @@ module Hive
 			class Wifi < Diagnostic
 				attr_accessor :status, :wifi, :message
 
+        def diagnose
+          self.fail( :message => 'WIFI on wrong network', {} )
+          self.pass( :message => 'WIFI is fine' )
+        end
+        
+        def repair(result)
+          result.passed!
+        end
+
 				def wifi_status
 					@status = DeviceAPI::Android::ADB.wifi(@options['serial'])[:status].scan(/^[^\/]*/)[0]
 					@wifi = DeviceAPI::Android::ADB.wifi(@options['serial'])[:wifi]	
