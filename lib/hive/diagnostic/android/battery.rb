@@ -17,16 +17,16 @@ module Hive
 				battery_details = battery
 				voltage = battery_details['voltage']
 				temperature = battery_details['temperature']
-      			if temperature.to_i < config['temperature'].to_i
-      				result = self.pass("Temperature: #{temperature}\tVoltage:#{voltage}\n Battery status: OK", "battery")
-      			else
-      				result = self.fail("Battery overheated. Temperature: #{temperature}\tVoltage:#{voltage}", "battery")
-      			end
-      			result
-      		end
+				if temperature.to_i < config['temperature'].to_i
+					result = self.pass("Temperature: #{temperature}\tVoltage:#{voltage}\n Battery status: OK", "battery")
+				else
+					result = self.fail("Battery overheated. Temperature: #{temperature}\tVoltage:#{voltage}", "battery")
+				end
+				result
+			end
 
-      		def repair(result)
-      			diagnose
+			def repair(result)
+				diagnose
 			end
 		end
 		end
