@@ -4,8 +4,9 @@ module Hive
 		class Android
 			class Wifi < Diagnostic
 
-			def device
-				@device = DeviceAPI::Android::ADB
+			def initialize(config, serial)
+				@device = DeviceAPI::Android::ADB#self.device
+				super(config, serial)
 			end
 
 			def wifi
@@ -15,7 +16,7 @@ module Hive
 
 			def diagnose
 				wifi_status = wifi
-				if wifi_status[:status].capitalize == config[:status] 
+				if wifi_status[:status].capitalize != config[:status] 
 					result = self.fail('Wifi Disconnected', "wifi")
 				else 
 					result = self.pass("Wifi connected to '#{wifi_status[:access_point]}'", "wifi")
