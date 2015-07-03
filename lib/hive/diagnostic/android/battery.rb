@@ -26,7 +26,7 @@ module Hive
       		end
 
       		def repair(result)
-
+      			diagnose
 			end
 		end
 		end
