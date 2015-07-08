@@ -4,13 +4,8 @@ module Hive
 		class Android
 			class Wifi < Diagnostic
 
-			def initialize(config, serial)
-				@device = DeviceAPI::Android::ADB
-				super(config, serial)
-			end
-
 			def wifi
-				wifi_details = self.device.wifi(@serial)
+				wifi_details = self.device_api.wifi_status
 				return {:status => wifi_details[:status].scan(/^[^\/]*/)[0], :access_point => wifi_details[:access_point]}
 			end
 
