@@ -29,10 +29,6 @@ module Hive
         queues.flatten
       end
 
-      def calculate_device_name(device)
-        "mobile-#{device.manufacturer}-#{device.model}".gsub(' ', '_').downcase
-      end
-
       def populate_queues(device)
         queues = calculate_queue_names(device)
 
@@ -133,7 +129,6 @@ module Hive
               device_model: device.model,
               device_brand: device.manufacturer,
               device_range: device.range,
-              name: calculate_device_name(device),
               hive: Hive.id
           }
         rescue DeviceAPI::Android::ADBCommandError
@@ -150,14 +145,16 @@ module Hive
         rows = []
 
         hive_details = Hive.devicedb('Hive').find(Hive.id)
-        unless hive_details['devices'].empty?
-          rows = hive_details['devices'].map do |device|
-            [
-                "#{device['device_brand']} #{device['device_model']}",
-                device['serial'],
-                (device['device_queues'].map { |queue| queue['name']}).join("\n"),
-                device['status']
-            ]
+        if hive_details.key?('devices')
+          unless hive_details['devices'].empty?
+            rows = hive_details['devices'].map do |device|
+              [
+                  "#{device['device_brand']} #{device['device_model']}",
+                  device['serial'],
+                  (device['device_queues'].map { |queue| queue['name']}).join("\n"),
+                  device['status']
+              ]
+            end
           end
         end
         table = Terminal::Table.new :headings => ['Device', 'Serial', 'Queue Name', 'Status'], :rows => rows
