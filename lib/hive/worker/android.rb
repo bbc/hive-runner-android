@@ -23,6 +23,7 @@ module Hive
         @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
         self.device = device
+        self.device_api = DeviceAPI::Android.device(device['serial'])
         super(device)
       end
 
