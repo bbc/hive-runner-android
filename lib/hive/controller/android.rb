@@ -15,18 +15,31 @@ module Hive
         end
       end
 
+      # Uses either DeviceAPI or DeviceDB to generate queue names for a device
       def calculate_queue_names(device)
-        queues = [
-                    device['device_model'],
-                    device['device_brand'],
-                    device['os'],
-                    "#{device['os']}-#{device['os_version']}",
-                    "#{device['os']}-#{device['os_version']}-#{device['device_model']}"
-                 ]
+        if device.is_a? DeviceAPI::Android::Device
+          queues = [
+              device.model,
+              device.manufacturer,
+              'android',
+              "android-#{device.version}",
+              "android-#{device.version}-#{device.model}"
+          ]
+        else
 
-        queues << device["features"] unless device["features"].empty?
+          queues = [
+              device['device_model'],
+              device['device_brand'],
+              device['os'],
+              "#{device['os']}-#{device['os_version']}",
+              "#{device['os']}-#{device['os_version']}-#{device['device_model']}"
+          ]
 
-        queues.flatten
+          queues << device["features"] unless device["features"].empty?
+
+          queues.flatten
+        end
+        queues
       end
 
       def populate_queues(device)
@@ -116,8 +129,12 @@ module Hive
           end
         else
           # DeviceDB isn't available, use DeviceAPI instead
-          devices.collect do |physical_device|
-            Object.const_get(@device_class).new(@config.merge('id' => physical_device.serial))
+          device_info = devices.map do |device|
+            {'id' =>  device.serial, status: 'idle', devices: [{ device_queues: [ calculate_queue_names(device).map { |q| { name: q } } ]}]}
+          end
+
+          device_info.collect do |physical_device|
+            Object.const_get(@device_class).new(@config.merge(physical_device))
           end
         end
       end
