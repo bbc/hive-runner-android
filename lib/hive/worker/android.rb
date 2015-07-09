@@ -22,8 +22,8 @@ module Hive
       def initialize(device)
         @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
+        device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         self.device = device
-        #self.device_api = DeviceAPI::Android.device(device['serial'])
         super(device)
       end
 
