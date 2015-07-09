@@ -75,12 +75,16 @@ module Hive
         hive_details = Hive.devicedb('Hive').find(Hive.id)
         Hive.logger.debug("#{Time.now} Finished fetching hive details")
 
-        unless hive_details.key?('devices')
-          Hive.logger.debug('Could not connect to DeviceDB at this time')
-          return []
+        if hive_details.key?('devices')
+          # Update the 'cached' results from DeviceDB
+          @hive_details = hive_details
+        else
+          # DeviceDB isn't available - use the cached version
+          hive_details = @hive_details
         end
 
-        unless hive_details['devices'].empty?
+        if hive_details.is_a? Hash
+          # DeviceDB information is available, use it
           hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
             registered_device = devices.select { |a| a.serial == device['serial']}
             if registered_device.empty?
@@ -100,20 +104,21 @@ module Hive
               devices = devices - registered_device
             end
           end
-        end
 
-        devices.each do |device|
-          register_new_device(device)
-        end
+          devices.each do |device|
+            register_new_device(device)
+          end
 
-        display_devices
+          display_devices(hive_details)
 
-        if hive_details.key?('devices')
-          hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |device|
-            Object.const_get(@device_class).new(@config.merge(device))
+          hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |hive_device|
+            Object.const_get(@device_class).new(@config.merge(hive_device))
           end
         else
-          []
+          # DeviceDB isn't available, use DeviceAPI instead
+          devices.collect do |physical_device|
+            Object.const_get(@device_class).new(@config.merge('id' => physical_device.serial))
+          end
         end
       end
 
@@ -141,10 +146,8 @@ module Hive
         Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
       end
 
-      def display_devices
+      def display_devices(hive_details)
         rows = []
-
-        hive_details = Hive.devicedb('Hive').find(Hive.id)
         if hive_details.key?('devices')
           unless hive_details['devices'].empty?
             rows = hive_details['devices'].map do |device|
