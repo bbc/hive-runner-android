@@ -130,7 +130,7 @@ module Hive
         else
           # DeviceDB isn't available, use DeviceAPI instead
           device_info = devices.map do |device|
-            {'id' =>  device.serial, status: 'idle', devices: [{ device_queues: [ calculate_queue_names(device).map { |q| { name: q } } ]}]}
+            {'id' =>  device.serial, 'serial' => device.serial, status: 'idle', devices: [{ device_queues: [ calculate_queue_names(device).map { |q| { name: q } } ]}]}
           end
 
           device_info.collect do |physical_device|
