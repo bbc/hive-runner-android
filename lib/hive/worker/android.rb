@@ -23,12 +23,13 @@ module Hive
         @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
         device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
+        set_device_status('idle')
         self.device = device
         super(device)
       end
 
       def pre_script(job, file_system, script)
-        Hive.devicedb('Device').poll(@options['id'], 'busy')
+        set_device_status('busy')
         script.set_env "TEST_SERVER_PORT", @adb_server_port
 
         # TODO: Allow the scheduler to specify the ports to use
@@ -59,19 +60,30 @@ module Hive
         @ports.ports.each do |name, port|
           Hive.data_store.port.release(port)
         end
-        Hive.devicedb('Device').poll(@options['id'], 'idle')
+        set_device_status('idle')
       end
 
       def device_status
         details = Hive.devicedb('Device').find(@options['id'])
-        @log.info("Device details: #{details.inspect}")
-        details['status']
+        if details.key?('status')
+          details['status']
+        else
+          @state
+        end
       end
 
       def set_device_status(status)
-        @log.debug("Setting status of device to '#{status}'")
-        details = Hive.devicedb('Device').poll(@options['id'], status)
-        details['status']
+        @state = status
+        begin
+          details = Hive.devicedb('Device').poll(@options['id'], status)
+          if details.key?('status')
+            details['status']
+          else
+            @state
+          end
+        rescue
+          @state
+        end
       end
     end
   end
