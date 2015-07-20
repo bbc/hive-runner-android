@@ -5,7 +5,8 @@ module Hive
       class Memory < Diagnostic
 
         def memory
-          mem = self.device_api.memory.mem_info
+          @memory = self.device_api.memory unless @memory
+          mem = @memory.mem_info
           return {:free => mem.free.split(' ')[0], 
                   :total => mem.total.split(' ')[0], 
                   :used => mem.used.split(' ')[0], }
@@ -36,6 +37,7 @@ module Hive
         end
 
         def repair(result)
+          diagnose
         end
 
       end
