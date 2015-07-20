@@ -10,10 +10,10 @@ module Hive
 			end
 
 			def diagnose
-				wifi_status = wifi
 				result = nil
+				wifi_status = wifi
 				config.each do |key, value|
-				if config != nil && config.keys.count != 0
+					if config != nil && config.keys.count != 0
 					begin
 						if wifi_status[:"#{key}"].capitalize == value.capitalize 
 							result = self.pass("#{key.capitalize} : #{wifi_status[:"#{key}"]}", "wifi" )
@@ -22,11 +22,11 @@ module Hive
 							break
 						end
 					rescue 
-						Hive.logger.error("Invalid Parameter")
+						Hive.logger.error("Invalid Parameter for Wifi")
 					raise InvalidParameter.new("Invalid Wifi Parameter: #{key}") if !result
 					end
 				else
-					result = self.pass("No parameter specified", "memory")
+					result = self.pass("No parameter specified", "wifi")
 				end
 				end
 				result
