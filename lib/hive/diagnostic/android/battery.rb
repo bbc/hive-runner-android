@@ -4,7 +4,6 @@ module Hive
 		class Android
 		class Battery < Diagnostic
 
-	
 			def battery
 				self.device_api.battery_info
 			end
