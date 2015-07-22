@@ -4,29 +4,34 @@ module Hive
 		class Android
 		class Battery < Diagnostic
 
-			def initialize(config, serial)
-				@device = DeviceAPI::Android::ADB
-				super(config, serial)
-			end
-
+	
 			def battery
-			 	self.device.get_battery_info(@serial)
+				self.device_api.battery_info
 			end
 			
 			def diagnose
-				battery_details = battery
-				voltage = battery_details['voltage']
-				temperature = battery_details['temperature']
-				if temperature.to_i < config['temperature'].to_i
-					result = self.pass("Temperature: #{temperature}\tVoltage:#{voltage}\n Battery status: OK", "battery")
+			result = nil
+			battery_info = battery
+			begin
+				if config != nil && config.keys.count != 0	
+					temperature = battery_info['temperature']
+					if temperature.to_i < config['temperature'].to_i
+						result = self.pass("Temperature: #{temperature}\n Battery status: OK", "battery")
+					else
+						result = self.fail("Battery overheated. Temperature: #{temperature} ", "battery")
+					end
 				else
-					result = self.fail("Battery overheated. Temperature: #{temperature}\tVoltage:#{voltage}", "battery")
+					result = self.pass("No parameter specified for battery", "battery")
 				end
-				result
+			rescue
+            	Hive.logger.error("Invalid Memory Parameter")
+          		raise InvalidParameterError.new("Invalid Memory Parameter for memory") if !result
+          	end
+			result
 			end
 
 			def repair(result)
-				result
+				diagnose
 			end
 		end
 		end
