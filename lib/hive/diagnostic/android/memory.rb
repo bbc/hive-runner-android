@@ -13,26 +13,26 @@ module Hive
         end
 
         def diagnose
-          result = nil
-          operator = {:free => :>=, :used => :<= , :total => :==}
-          memory_status = memory
-          begin
-            if config != nil && config.keys.count != 0
-              config.each do |key, value|
-                  if memory_status[:"#{key}"].to_i.send(operator[:"#{key}"], value.to_i) 
+        result = nil
+        operator = {:free => :>=, :used => :<= , :total => :==}
+        memory_status = memory
+          if config != nil && config.keys.count != 0
+            config.each do |key, value|
+              begin
+                if memory_status[:"#{key}"].to_i.send(operator[:"#{key}"], value.to_i) 
                   result = self.pass("#{key.capitalize} Memory (#{memory_status[:"#{key}"]}) #{operator[:"#{key}"]} #{value}", "memory" )
-                  else
-                    result = self.fail("Error: #{key.capitalize} Memory (#{memory_status[:"#{key}"]}) is not #{operator[:"#{key}"]} #{value}", "memory")
-                    break
-                  end
-              end 
-            else 
-              result = self.pass("No parameter specified", "memory")
-            end
-          rescue
-            Hive.logger.error("Invalid Memory Parameter")
-          raise InvalidParameterError.new("Invalid Memory Parameter") if !result   
-        end
+                else
+                  result = self.fail("Error: #{key.capitalize} Memory (#{memory_status[:"#{key}"]}) is not #{operator[:"#{key}"]} #{value}", "memory")
+                  break
+                end
+              rescue
+                Hive.logger.error("Invalid Memory Parameter for memory")
+                raise InvalidParameterError.new("Invalid Memory Parameter for memory") if !result
+              end
+            end 
+          else 
+            result = self.pass("No parameter specified", "memory")
+          end
         result
         end
 
