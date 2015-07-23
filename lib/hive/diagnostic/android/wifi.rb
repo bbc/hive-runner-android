@@ -36,8 +36,6 @@ module Hive
 				Hive.logger.info("Trying to repair wifi")
 				options = {:apk => '/path/to/apk/to/toggle/wifi', :package => '/pkg/name/ex: com.wifi.togglewifi'} 
 				self.device_api.install(options[:apk])
-				require 'pry'
-				binding.pry
 				self.device_api.start_intent("-n com.wifi.togglewifi/.MainActivity -e wifi true")
 				sleep 5 
 				self.device_api.uninstall(options[:package])
