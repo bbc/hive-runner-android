@@ -23,8 +23,8 @@ module Hive
 					result = self.pass("No parameter specified for battery", "battery")
 				end
 			rescue
-            	Hive.logger.error("Invalid Memory Parameter")
-          		raise InvalidParameterError.new("Invalid Memory Parameter for memory") if !result
+            	Hive.logger.error("Invalid Battery Parameter")
+          		raise InvalidParameterError.new("Invalid Parameter for battery") if !result
           	end
 			result
 			end

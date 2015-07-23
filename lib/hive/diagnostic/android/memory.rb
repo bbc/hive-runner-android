@@ -26,8 +26,8 @@ module Hive
                   break
                 end
               rescue
-                Hive.logger.error("Invalid Memory Parameter for memory")
-                raise InvalidParameterError.new("Invalid Memory Parameter for memory") if !result
+                Hive.logger.error("Invalid Memory Parameter")
+                raise InvalidParameterError.new("Invalid Parameter for memory") if !result
               end
             end 
           else 
