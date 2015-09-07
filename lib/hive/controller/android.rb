@@ -12,7 +12,9 @@ module Hive
       def reboot_if_required(serial)
         if DeviceAPI::Android::ADB.get_uptime(serial) > (@config['time_before_reboot'] || TIME_BEFORE_REBOOT)
           DeviceAPI::Android::ADB.reboot(serial)
+          return true
         end
+        false
       end
 
       # Uses either DeviceAPI or DeviceDB to generate queue names for a device
@@ -109,7 +111,7 @@ module Hive
               Hive.logger.debug("#{Time.now} Polling attached device - #{device}")
               Hive.devicedb('Device').poll(device['id'])
               Hive.logger.debug("#{Time.now} Finished polling device")
-              reboot_if_required(device['serial'])
+              next if reboot_if_required(device['serial'])
 
               # Make sure that this device has all the queues it should have
               populate_queues(device)
