@@ -10,8 +10,6 @@ module Hive
         end
 
         def diagnose
-          require 'pry'
-          binding.pry
           if config.has_key?(:reboot_timeout)
             if Time.now < @next_reboot_time
               self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s", "Reboot")
