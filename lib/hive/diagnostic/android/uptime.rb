@@ -14,12 +14,12 @@ module Hive
           binding.pry
           if config.has_key?(:reboot_timeout)
             if Time.now < @next_reboot_time
-              self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s")
+              self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s", "Reboot")
             else
-              self.fail("Reboot required")
+              self.fail("Reboot required", "Reboot")
             end
           else
-            self.pass("Not configured to reboot")
+            self.pass("Not configured to reboot", "Reboot")
           end
         end
         
@@ -32,7 +32,7 @@ module Hive
             Hive.logger.error("Device not found")
           end
           @next_reboot_time += config[:reboot_timeout]
-          self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s")
+          self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s", "Reboot")
         end
 
       end
