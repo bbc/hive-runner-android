@@ -13,9 +13,9 @@ module Hive
         end
 
         def diagnose
-        result = nil
-        operator = {:free => :>=, :used => :<= , :total => :==}
-        memory_status = memory
+          result = nil
+          operator = {:free => :>=, :used => :<= , :total => :==}
+          memory_status = memory
           if config != nil && config.keys.count != 0
             config.each do |key, value|
               begin
@@ -37,7 +37,8 @@ module Hive
         end
 
         def repair(result)
-          diagnose
+          # Add repair for memory
+          self.fail("Cannot repair memory", "memory")
         end
 
       end
