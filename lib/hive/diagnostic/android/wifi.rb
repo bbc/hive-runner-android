@@ -12,6 +12,12 @@ module Hive
       def diagnose
       result = nil
       wifi_status = wifi
+
+      if wifi_status[:access_point].capitalize == "Xxxx"
+        result = self.pass("Kindle returns wifi 'xxxx'", "wifi")
+        return result
+      end
+
       config.each do |key, value|
         if config != nil && config.keys.count != 0
           begin
