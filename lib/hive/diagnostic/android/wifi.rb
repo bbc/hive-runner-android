@@ -10,32 +10,32 @@ module Hive
       end
 
       def diagnose
-      result = nil
-      wifi_status = wifi
+        result = nil
+        wifi_status = wifi
 
-      if wifi_status[:access_point].capitalize == "Xxxx"
-        result = self.pass("Kindle returns wifi 'xxxx'", "wifi")
-        return result
-      end
-
-      config.each do |key, value|
-        if config != nil && config.keys.count != 0
-          begin
-            if wifi_status[:"#{key}"].capitalize == value.capitalize 
-              result = self.pass("#{key.capitalize} : #{wifi_status[:"#{key}"]}", "wifi" )
-            else
-              result = self.fail(" Error: #{key.capitalize} : #{wifi_status[:"#{key}"]} ", "wifi")
-              break
-            end
-          rescue 
-            Hive.logger.error("Invalid Parameter for Wifi #{key}")
-            raise InvalidParameter.new("Invalid Wifi Parameter for Wifi: #{key}") if !result
-          end
-        else
-          result = self.pass("No parameter specified", "wifi")
+        if wifi_status[:access_point].capitalize == "Xxxx"
+          result = self.pass("Kindle returns wifi 'xxxx'", "wifi")
+          return result
         end
-      end
-      result
+
+        config.each do |key, value|
+          if config != nil && config.keys.count != 0
+            begin
+              if wifi_status[:"#{key}"].capitalize == value.capitalize 
+                result = self.pass("#{key.capitalize} : #{wifi_status[:"#{key}"]}", "wifi" )
+              else
+                result = self.fail(" Error: #{key.capitalize} : #{wifi_status[:"#{key}"]} ", "wifi")
+                break
+              end
+            rescue 
+              Hive.logger.error("Invalid Parameter for Wifi #{key}")
+              raise InvalidParameter.new("Invalid Wifi Parameter for Wifi: #{key}") if !result
+            end
+          else
+            result = self.pass("No parameter specified", "wifi")
+          end
+        end
+        result
       end 
 
       def repair(result)
