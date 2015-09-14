@@ -67,7 +67,6 @@ module Hive
         details = Hive.devicedb('Device').find(@options['id'])
         if details.key?('status')
           @state = details['status']
-          details['status']
         else
           @state
         end
