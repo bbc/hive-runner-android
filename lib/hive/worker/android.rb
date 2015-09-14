@@ -22,16 +22,12 @@ module Hive
       def initialize(device)
         @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
-<<<<<<< HEAD
-        device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
-=======
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
-          Hive.logger.info("Device disconnected while worker initialization")
+          Hive.logger.info("Device disconnected during worker initialization")
         end
         set_device_status('idle')
->>>>>>> 71c6e585f4f02d957d1c069464c8ecbcd2be519d
         self.device = device
         super(device)
       end
