@@ -22,13 +22,22 @@ module Hive
       def initialize(device)
         @ports = PortReserver.new
         @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
+<<<<<<< HEAD
         device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
+=======
+        begin
+          device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
+        rescue DeviceAPI::Android::ADBCommandError
+          Hive.logger.info("Device disconnected while worker initialization")
+        end
+        set_device_status('idle')
+>>>>>>> 71c6e585f4f02d957d1c069464c8ecbcd2be519d
         self.device = device
         super(device)
       end
 
       def pre_script(job, file_system, script)
-        Hive.devicedb('Device').poll(@options['id'], 'busy')
+        set_device_status('busy')
         script.set_env "TEST_SERVER_PORT", @adb_server_port
 
         # TODO: Allow the scheduler to specify the ports to use
@@ -59,19 +68,30 @@ module Hive
         @ports.ports.each do |name, port|
           Hive.data_store.port.release(port)
         end
-        Hive.devicedb('Device').poll(@options['id'], 'idle')
+        set_device_status('idle')
       end
 
       def device_status
         details = Hive.devicedb('Device').find(@options['id'])
-        @log.info("Device details: #{details.inspect}")
-        details['status']
+        if details.key?('status')
+          @state = details['status']
+        else
+          @state
+        end
       end
 
       def set_device_status(status)
-        @log.debug("Setting status of device to '#{status}'")
-        details = Hive.devicedb('Device').poll(@options['id'], status)
-        details['status']
+        @state = status
+        begin
+          details = Hive.devicedb('Device').poll(@options['id'], status)
+          if details.key?('status')
+            details['status']
+          else
+            @state
+          end
+        rescue
+          @state
+        end
       end
     end
   end
