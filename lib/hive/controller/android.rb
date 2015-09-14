@@ -69,7 +69,7 @@ module Hive
 
       def detect
         devices = DeviceAPI::Android.devices
-        devices = [] if devices.empty?
+        
         Hive.logger.debug('No devices attached') if devices.empty?
         Hive.logger.debug("#{Time.now} Retrieving hive details")
         hive_details = Hive.devicedb('Hive').find(Hive.id)

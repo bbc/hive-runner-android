@@ -17,7 +17,7 @@ module Hive
             if temperature.to_i < config['temperature'].to_i
               result = self.pass("Temperature: #{temperature}\n Battery status: OK", "battery")
             else
-              result = self.fail("Battery overheated. Temperature: #{temperature} ", "battery")
+              result = self.fail("Battery temperature above threshold. Temperature: #{temperature} ", "battery")
             end
           else
             result = self.pass("No parameter specified for battery", "battery")
