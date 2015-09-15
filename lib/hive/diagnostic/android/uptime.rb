@@ -4,20 +4,16 @@ module Hive
     class Android
       class Uptime < Diagnostic
         
-        def initialize(config, options)
-          @next_reboot_time = Time.now + config[:reboot_timeout] if config.has_key?(:reboot_timeout)
-          super(config, options)
-        end
-
         def diagnose
           if config.has_key?(:reboot_timeout)
-            if Time.now < @next_reboot_time
-              self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s", "Reboot")
+            uptime = self.device_api.uptime 
+            if  uptime < config[:reboot_timeout]
+              self.pass("Time for next reboot: #{config[:reboot_timeout] - uptime}s", "Reboot")
             else
               self.fail("Reboot required", "Reboot")
             end
           else
-            self.pass("Not configured to reboot", "Reboot")
+            self.pass("Not configured for reboot", "Reboot")
           end
         end
         
@@ -29,8 +25,6 @@ module Hive
           rescue
             Hive.logger.error("Device not found")
           end
-          @next_reboot_time += config[:reboot_timeout]
-          self.pass("Time to next reboot: #{@next_reboot_time - Time.now}s", "Reboot")
         end
 
       end
