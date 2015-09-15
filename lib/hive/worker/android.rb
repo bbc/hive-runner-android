@@ -25,7 +25,7 @@ module Hive
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
-          Hive.logger.info("Device disconnected while worker initialization")
+          Hive.logger.info("Device disconnected during worker initialization")
         end
         set_device_status('idle')
         self.device = device
