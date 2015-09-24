@@ -21,7 +21,6 @@ module Hive
 
       def initialize(device)
         @ports = PortReserver.new
-        @adb_server_port = self.allocate_port
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
@@ -34,7 +33,7 @@ module Hive
 
       def pre_script(job, file_system, script)
         set_device_status('busy')
-        script.set_env "TEST_SERVER_PORT", @adb_server_port
+        script.set_env "TEST_SERVER_PORT",    @ports.reserve(queue_name: 'ADB')
 
         # TODO: Allow the scheduler to specify the ports to use
         script.set_env "CHARLES_PROXY_PORT",  @ports.reserve(queue_name: 'Charles')
