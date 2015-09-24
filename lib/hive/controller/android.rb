@@ -114,7 +114,7 @@ module Hive
           display_devices(hive_details)
 
           hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |hive_device|
-            Object.const_get(@device_class).new(@config.merge(hive_device))
+            self.create_device(hive_device)
           end
         else
           # DeviceDB isn't available, use DeviceAPI instead
@@ -123,7 +123,7 @@ module Hive
           end
 
           device_info.collect do |physical_device|
-            Object.const_get(@device_class).new(@config.merge(physical_device))
+            self.create_device(physical_device)
           end
         end
       end

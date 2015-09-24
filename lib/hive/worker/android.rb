@@ -9,7 +9,7 @@ module Hive
     end
 
     def reserve(queue_name)
-      self.ports[queue_name] = Hive.data_store.port.assign("#{queue_name}")
+      self.ports[queue_name] = self.allocate_port
       self.ports[queue_name]
     end
   end
@@ -21,7 +21,7 @@ module Hive
 
       def initialize(device)
         @ports = PortReserver.new
-        @adb_server_port = Hive.data_store.port.assign("#{device['name']} - adb")
+        @adb_server_port = self.allocate_port
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
@@ -63,7 +63,7 @@ module Hive
       def post_script(job, file_system, script)
         @log.info('Post script')
         @ports.ports.each do |name, port|
-          Hive.data_store.port.release(port)
+          self.release_port(port)
         end
         set_device_status('idle')
       end
