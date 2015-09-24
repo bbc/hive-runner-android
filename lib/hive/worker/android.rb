@@ -20,7 +20,7 @@ module Hive
       attr_accessor :device
 
       def initialize(device)
-        @ports = PortReserver.new
+        @worker_ports = PortReserver.new
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
@@ -33,13 +33,13 @@ module Hive
 
       def pre_script(job, file_system, script)
         set_device_status('busy')
-        script.set_env "TEST_SERVER_PORT",    @ports.reserve(queue_name: 'ADB')
+        script.set_env "TEST_SERVER_PORT",    @worker_ports.reserve(queue_name: 'ADB')
 
         # TODO: Allow the scheduler to specify the ports to use
-        script.set_env "CHARLES_PROXY_PORT",  @ports.reserve(queue_name: 'Charles')
-        script.set_env "APPIUM_PORT",         @ports.reserve(queue_name: 'Appium')
-        script.set_env "BOOTSTRAP_PORT",      @ports.reserve(queue_name: 'Bootstrap')
-        script.set_env "CHROMEDRIVER_PORT",   @ports.reserve(queue_name: 'Chromedriver')
+        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles')
+        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium')
+        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap')
+        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver')
 
         script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
@@ -52,7 +52,7 @@ module Hive
           DeviceAPI::Android::Signing.sign_apk({apk: apk_path, resign: true})
         end
 
-        "#{self.device['serial']} #{@ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
+        "#{self.device['serial']} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
 
       def job_message_klass
@@ -61,7 +61,7 @@ module Hive
 
       def post_script(job, file_system, script)
         @log.info('Post script')
-        @ports.ports.each do |name, port|
+        @worker_ports.ports.each do |name, port|
           self.release_port(port)
         end
         set_device_status('idle')
