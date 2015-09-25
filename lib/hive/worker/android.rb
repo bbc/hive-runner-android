@@ -9,7 +9,7 @@ module Hive
     end
 
     def reserve(queue_name)
-      self.ports[queue_name] = self.allocate_port
+      self.ports[queue_name] = yield
       self.ports[queue_name]
     end
   end
@@ -33,13 +33,13 @@ module Hive
 
       def pre_script(job, file_system, script)
         set_device_status('busy')
-        script.set_env "TEST_SERVER_PORT",    @worker_ports.reserve(queue_name: 'ADB')
+        script.set_env "TEST_SERVER_PORT",    @worker_ports.reserve(queue_name: 'ADB') { self.reserve }
 
         # TODO: Allow the scheduler to specify the ports to use
-        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles')
-        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium')
-        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap')
-        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver')
+        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles') { self.reserve }
+        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium') { self.reserve }
+        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { self.reserve }
+        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { self.reserve }
 
         script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
