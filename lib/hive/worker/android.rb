@@ -33,13 +33,13 @@ module Hive
 
       def pre_script(job, file_system, script)
         set_device_status('busy')
-        script.set_env "TEST_SERVER_PORT",    @worker_ports.reserve(queue_name: 'ADB') { self.reserve }
+        script.set_env "TEST_SERVER_PORT",    @worker_ports.reserve(queue_name: 'ADB') { self.allocate_port }
 
         # TODO: Allow the scheduler to specify the ports to use
-        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles') { self.reserve }
-        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium') { self.reserve }
-        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { self.reserve }
-        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { self.reserve }
+        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles') { self.allocate_port }
+        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium') { self.allocate_port }
+        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { self.allocate_port }
+        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { self.allocate_port }
 
         script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
