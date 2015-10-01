@@ -52,6 +52,8 @@ module Hive
           DeviceAPI::Android::Signing.sign_apk({apk: apk_path, resign: true})
         end
 
+        DeviceAPI::Android.device(device['serial']).unlock
+
         "#{self.device['serial']} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
 
