@@ -59,7 +59,8 @@ module Hive
         queue = Hive.devicedb('Queue').find_by_name(name)
         return queue.first['id'] unless queue.empty?
 
-        create_queue(name, "#{name} queue created by Hive Runner")['id']
+        queue = create_queue(name, "#{name} queue created by Hive Runner")
+        queue['id'] unless queue.empty?
       end
 
       def create_queue(name, description)
@@ -72,7 +73,7 @@ module Hive
       end
 
       def detect
-        devices = DeviceAPI::Android.devices 
+        devices = DeviceAPI::Android.devices
         Hive.logger.debug('No devices attached') if devices.empty?
         Hive.logger.debug("#{Time.now} Retrieving hive details")
         hive_details = Hive.devicedb('Hive').find(Hive.id)
@@ -89,7 +90,7 @@ module Hive
         if hive_details.is_a? Hash
           # DeviceDB information is available, use it
           hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
-            registered_device = devices.select { |a| a.serial == device['serial']}
+            registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized}
             if registered_device.empty?
               # A previously registered device isn't attached
               Hive.logger.debug("Removing previously registered device - #{device}")
