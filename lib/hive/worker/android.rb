@@ -22,7 +22,6 @@ module Hive
       def initialize(device)
         @worker_ports = PortReserver.new
         # Assign adb port for this worker
-        @adb_port = @worker_ports.reserve(queue_name: 'ADB') { self.allocate_port }
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
@@ -33,15 +32,20 @@ module Hive
         super(device)
       end
 
+      def adb_port
+        return @adb_port unless @adb_port.nil?
+        @adb_port = @port_allocator.allocate_port
+      end
+
       def pre_script(job, file_system, script)
         set_device_status('busy')
-        script.set_env "TEST_SERVER_PORT",    @adb_port
+        script.set_env "TEST_SERVER_PORT",    adb_port
 
         # TODO: Allow the scheduler to specify the ports to use
-        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles') { self.allocate_port }
-        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium') { self.allocate_port }
-        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { self.allocate_port }
-        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { self.allocate_port }
+        script.set_env "CHARLES_PROXY_PORT",  @worker_ports.reserve(queue_name: 'Charles') { @port_allocator.allocate_port }
+        script.set_env "APPIUM_PORT",         @worker_ports.reserve(queue_name: 'Appium') { @port_allocator.allocate_port }
+        script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { @port_allocator.allocate_port }
+        script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { @port_allocator.allocate_port }
 
         script.set_env 'ADB_DEVICE_ARG', self.device['serial']
 
@@ -66,7 +70,7 @@ module Hive
       def post_script(job, file_system, script)
         @log.info('Post script')
         @worker_ports.ports.each do |name, port|
-          self.release_port(port) unless name == 'ADB'
+          @port_allocator.release_port(port)
         end
         set_device_status('idle')
       end
