@@ -21,7 +21,6 @@ module Hive
 
       def initialize(device)
         @worker_ports = PortReserver.new
-        # Assign adb port for this worker
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
         rescue DeviceAPI::Android::ADBCommandError
@@ -33,6 +32,7 @@ module Hive
       end
 
       def adb_port
+        # Assign adb port for this worker
         return @adb_port unless @adb_port.nil?
         @adb_port = @port_allocator.allocate_port
       end
