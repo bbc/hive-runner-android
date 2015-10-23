@@ -36,6 +36,9 @@ module Hive
       def populate_queues(device)
         queues = calculate_queue_names(device)
 
+        # Add the queue prefix if it hase been setup in the config
+        queues = queues.map { |a| "#{@config['queue_prefix']}-#{a}"} if @config['queue_prefix']
+
         devicedb_queues = device['device_queues'].map { |d| d['name'] }
         # Check to see if the queues have already been registered with this device
         missing_queues = (queues - devicedb_queues) + (devicedb_queues - queues)
