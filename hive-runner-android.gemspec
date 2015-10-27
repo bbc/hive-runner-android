@@ -11,4 +11,5 @@ Gem::Specification.new do |s|
   s.license	    	= 'MIT'
   s.add_runtime_dependency 'device_api-android', '~> 1.0'
   s.add_runtime_dependency 'hive-runner', '~> 2.0'
+  s.add_runtime_dependency 'terminal-table', '>= 1.4'
 end
