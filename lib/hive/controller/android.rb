@@ -60,7 +60,7 @@ module Hive
 
       def find_or_create_queue(name)
         queue = Hive.devicedb('Queue').find_by_name(name)
-        return queue.first['id'] unless queue.empty?
+        return queue.first['id'] unless queue.empty? || queue.key?('error')
 
         queue = create_queue(name, "#{name} queue created by Hive Runner")
         queue['id'] unless queue.empty?
