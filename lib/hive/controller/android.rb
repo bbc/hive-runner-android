@@ -36,7 +36,7 @@ module Hive
       def populate_queues(device)
         queues = calculate_queue_names(device)
 
-        # Add the queue prefix if it hase been setup in the config
+        # Add the queue prefix if it has been setup in the config
         queues = queues.map { |a| "#{@config['queue_prefix']}-#{a}"} if @config['queue_prefix']
 
         devicedb_queues = device['device_queues'].map { |d| d['name'] }
@@ -60,7 +60,8 @@ module Hive
 
       def find_or_create_queue(name)
         queue = Hive.devicedb('Queue').find_by_name(name)
-        return queue.first['id'] unless queue.empty? || queue.key?('error')
+
+        return queue.first['id'] unless queue.empty? || queue.is_a?(Hash)
 
         queue = create_queue(name, "#{name} queue created by Hive Runner")
         queue['id'] unless queue.empty?

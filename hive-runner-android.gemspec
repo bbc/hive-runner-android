@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name	    	= 'hive-runner-android'
-  s.version	    	= '1.1.1'
+  s.version	    	= '1.1.2'
   s.date 	    	= '2015-02-26'
   s.summary	    	= 'Hive Runner Android'
   s.description		= 'The Android controller module for Hive Runner'
