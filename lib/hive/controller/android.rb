@@ -83,6 +83,21 @@ module Hive
         hive_details = Hive.devicedb('Hive').find(Hive.id)
         Hive.logger.debug("#{Time.now} Finished fetching hive details")
 
+        devices.each do |device|
+          Hive.hive_mind.register(
+              hostname: device.model,
+              serial: device.serial,
+              macs: [device.wifi_mac_address],
+              ips: [device.ip_address],
+              brand: device.manufacturer.capitalize,
+              model: device.model,
+              device_type: 'Mobile',
+              imei: device.imei,
+              hive_id: Hive.id
+          )
+        end
+
+
         if hive_details.key?('devices')
           # Update the 'cached' results from DeviceDB
           @hive_details = hive_details
