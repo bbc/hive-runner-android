@@ -6,24 +6,6 @@ module Hive
   class Controller
     class Android < Controller
 
-      def find_or_create_queue(name)
-        queue = Hive.devicedb('Queue').find_by_name(name)
-
-        return queue.first['id'] unless queue.empty? || queue.is_a?(Hash)
-
-        queue = create_queue(name, "#{name} queue created by Hive Runner")
-        queue['id'] unless queue.empty?
-      end
-
-      def create_queue(name, description)
-        queue_attributes = {
-            name: name,
-            description: description
-        }
-
-        Hive.devicedb('Queue').register(device_queue: queue_attributes )
-      end
-
       def detect
         devices = DeviceAPI::Android.devices
         Hive.logger.debug('No devices attached') if devices.empty?
@@ -95,30 +77,6 @@ module Hive
 
         Hive.logger.info(attached_devices)
         attached_devices
-      end
-
-      def register_new_device(device)
-        begin
-          Hive.logger.debug("Adding new Android device: #{device.model}")
-
-          attributes = {
-              os: 'android',
-              os_version: device.version,
-              serial: device.serial,
-              device_type: 'mobile',
-              device_model: device.model,
-              device_brand: device.manufacturer,
-              device_range: device.range,
-              hive: Hive.id
-          }
-        rescue DeviceAPI::Android::ADBCommandError
-          # If a device has been disconnected while we're trying to add it, the device_api
-          # gem will throw an error
-          Hive.logger.debug('Device disconnected while attempting to add')
-        end
-
-        registration = Hive.devicedb('Device').register(attributes)
-        Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
       end
 
       def display_devices(hive_details)
