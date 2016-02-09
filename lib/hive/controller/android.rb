@@ -84,19 +84,29 @@ module Hive
         Hive.logger.debug("#{Time.now} Finished fetching hive details")
 
         devices.each do |device|
-          Hive.hive_mind.register(
-              hostname: device.model,
-              serial: device.serial,
-              macs: [device.wifi_mac_address],
-              ips: [device.ip_address],
-              brand: device.manufacturer.capitalize,
-              model: device.model,
-              device_type: 'Mobile',
-              imei: device.imei,
-              hive_id: Hive.id
-          )
+          begin
+            Hive.hive_mind.register(
+                hostname: device.model,
+                serial: device.serial,
+                macs: [device.wifi_mac_address],
+                ips: [device.ip_address],
+                brand: device.manufacturer.capitalize,
+                model: device.model,
+                device_type: 'Mobile',
+                imei: device.imei,
+                hive_id: Hive.id
+            )
+          rescue DeviceAPI::DeviceNotFound
+            Hive.logger.info("Device '#{device.serial}' disconnected during registration")
+            devices.delete(device)
+          rescue DeviceAPI::UnauthorizedDevice
+            Hive.logger.info("Device '#{device.serial}' is unauthorized")
+            devices.delete(device)
+          rescue => e
+            Hive.logger.warn("Error with connected device: #{e.message}")
+            devices.delete(device)
+          end
         end
-
 
         if hive_details.key?('devices')
           # Update the 'cached' results from DeviceDB
@@ -150,7 +160,7 @@ module Hive
 
       def register_new_device(device)
         begin
-          Hive.logger.debug("Adding new Android device: #{device.model}")
+          Hive.logger.info("Adding new Android device: #{device.model}")
 
           attributes = {
               os: 'android',
@@ -162,10 +172,16 @@ module Hive
               device_range: device.range,
               hive: Hive.id
           }
+        rescue DeviceAPI::DeviceNotFound
+          Hive.logger.info("Device '#{device.serial}' disconnected during registration")
+        rescue DeviceAPI::UnauthorizedDevice
+          Hive.logger.info("Device '#{device.serial}' is unauthorized")
         rescue DeviceAPI::Android::ADBCommandError
           # If a device has been disconnected while we're trying to add it, the device_api
           # gem will throw an error
           Hive.logger.debug('Device disconnected while attempting to add')
+        rescue => e
+          Hive.logger.warn("Error with connected device: #{e.message}")
         end
 
         registration = Hive.devicedb('Device').register(attributes)

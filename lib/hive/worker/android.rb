@@ -23,8 +23,14 @@ module Hive
         @worker_ports = PortReserver.new
         begin
           device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
+        rescue DeviceAPI::DeviceNotFound
+          Hive.logger.info("Device '#{device['serial']}' disconnected during initialization")
+        rescue DeviceAPI::UnauthorizedDevice
+          Hive.logger.info("Device '#{device['serial']}' is unauthorized")
         rescue DeviceAPI::Android::ADBCommandError
           Hive.logger.info("Device disconnected during worker initialization")
+        rescue => e
+          Hive.logger.warn("Error with connected device: #{e.message}")
         end
         set_device_status('idle')
         self.device = device
