@@ -8,6 +8,7 @@ module Hive
       def initialize(config)
         @identity = config['id']
         @queue_prefix = 'testing'
+puts config
         @model = config['model'].downcase.gsub(/\s/, '_')
         @brand = config['brand'].downcase.gsub(/\s/, '_')
         @os_version = config['os_version']
