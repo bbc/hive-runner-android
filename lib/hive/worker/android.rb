@@ -93,7 +93,8 @@ module Hive
 
       def set_device_status(status)
         # TODO Report to Hive Mind
-        #begin
+        @state = status
+        begin
           details = Hive.devicedb('Device').poll(@options['id'], status)
           if details.key?('status')
             details['status']
