@@ -11,6 +11,7 @@ module Hive
         self.detect_devicedb
       end
 
+      # Register with Hive Mind (New)
       def detect_hive_mind
         devices = DeviceAPI::Android.devices
         Hive.logger.debug('HM) No devices attached') if devices.empty?
@@ -88,8 +89,7 @@ module Hive
         attached_devices
       end
 
-# Old code
-
+      # Register with DeviceDB (Old)
       def detect_devicedb
         devices = DeviceAPI::Android.devices
         Hive.logger.debug('No devices attached') if devices.empty?
@@ -119,8 +119,6 @@ module Hive
               Hive.logger.debug("#{Time.now} Polling attached device - #{device}")
               Hive.devicedb('Device').poll(device['id'])
               Hive.logger.debug("#{Time.now} Finished polling device")
-
-              # Make sure that this device has all the queues it should have
 
               devices = devices - registered_device
               attached_devices <<
