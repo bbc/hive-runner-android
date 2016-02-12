@@ -189,8 +189,6 @@ module Hive
         Hive.devicedb('Device').hive_connect(registration['id'], Hive.id)
       end
 
-# End of old code
-
       def display_devices(hive_details)
         rows = []
         if hive_details.key?('devices')
