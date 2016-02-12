@@ -90,75 +90,6 @@ module Hive
 
 # Old code
 
-      def calculate_queue_names(device)
-        if device.is_a? DeviceAPI::Android::Device
-          queues = [
-              device.model,
-              device.manufacturer,
-              'android',
-              "android-#{device.version}",
-              "android-#{device.version}-#{device.model}"
-          ]
-        else
-
-          queues = [
-              device['device_model'],
-              device['device_brand'],
-              device['os'],
-              "#{device['os']}-#{device['os_version']}",
-              "#{device['os']}-#{device['os_version']}-#{device['device_model']}"
-          ]
-
-          queues << device["features"] unless device["features"].empty?
-
-          queues.flatten
-        end
-        queues
-      end
-
-      def populate_queues(device)
-        queues = calculate_queue_names(device)
-
-        # Add the queue prefix if it has been setup in the config
-        queues = queues.map { |a| "#{@config['queue_prefix']}-#{a}"} if @config['queue_prefix']
-
-        devicedb_queues = device['device_queues'].map { |d| d['name'] }
-        # Check to see if the queues have already been registered with this device
-        missing_queues = (queues - devicedb_queues) + (devicedb_queues - queues)
-        return if missing_queues.empty?
-
-        queues << missing_queues
-
-        queue_ids = queues.flatten.uniq.map { |queue| find_or_create_queue(queue) }
-
-        values = {
-            name: device['name'],
-            hive_id: device['hive_id'],
-            feature_list: device['features'],
-            device_queue_ids: queue_ids
-        }
-
-        Hive.devicedb('Device').edit(device['id'], values)
-      end
-
-      def find_or_create_queue(name)
-        queue = Hive.devicedb('Queue').find_by_name(name)
-
-        return queue.first['id'] unless queue.empty? || queue.is_a?(Hash)
-
-        queue = create_queue(name, "#{name} queue created by Hive Runner")
-        queue['id'] unless queue.empty?
-      end
-
-      def create_queue(name, description)
-        queue_attributes = {
-            name: name,
-            description: description
-        }
-
-        Hive.devicedb('Queue').register(device_queue: queue_attributes )
-      end
-
       def detect_devicedb
         devices = DeviceAPI::Android.devices
         Hive.logger.debug('No devices attached') if devices.empty?
@@ -190,10 +121,16 @@ module Hive
               Hive.logger.debug("#{Time.now} Finished polling device")
 
               # Make sure that this device has all the queues it should have
-              populate_queues(device)
 
               devices = devices - registered_device
-              attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version, 'model' => device['device_model'], 'brand' => device['device_brand']))
+              attached_devices <<
+                  self.create_device(device.merge(
+                    'os_version' => registered_device[0].version,
+                    'model' => device['device_model'],
+                    'brand' => device['device_brand'],
+                    'queues' => device['device_queues'].map{ |d| d['name'] },
+                    'queue_prefix' => @config['queue_prefix']
+                  ))
             end
           end
 
@@ -202,15 +139,8 @@ module Hive
           end
 
           display_devices(hive_details)
-
-          #hive_details['devices'].select {|a| a['os'] == 'android'}.collect do |hive_device|
-          #  self.create_device(hive_device)
-          #end
         else
           # DeviceDB isn't available, use DeviceAPI instead
-#          device_info = devices.map do |device|
-#            {'id' =>  device.serial, 'serial' => device.serial, status: 'idle', devices: [{ device_queues: [ calculate_queue_names(device).map { |q| { name: q } } ]}]}
-#          end
 
           device_info = devices.select { |a| a.status != :unauthorized }.map do |device|
             {
@@ -219,17 +149,14 @@ module Hive
               'status' => 'idle',
               'model' => device.model,
               'brand' => device.manufacturer,
-              'os_version' => device.version
+              'os_version' => device.version,
+              'queue_prefix' => @config['queue_prefix']
             }
           end
 
           attached_devices = device_info.collect do |physical_device|
             self.create_device(physical_device)
           end
-
-#          device_info.collect do |physical_device|
-#            self.create_device(physical_device)
-#          end
         end
         attached_devices
       end
