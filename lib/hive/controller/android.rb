@@ -17,9 +17,8 @@ module Hive
         Hive.logger.debug('HM) No devices attached') if devices.empty?
 
         if not Hive.hive_mind.device_details.has_key? :error
-          # Checking device_type for 'Mobile'
-          # TODO Check for os to ensure Android
-          connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' }
+          # Selecting only android mobiles
+          connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' && d['operating_system_name'] == 'android' }
 
           to_poll = []
           attached_devices = []
@@ -63,7 +62,8 @@ module Hive
                   model: device.model,
                   device_type: 'Mobile',
                   imei: device.imei,
-                  hive_id: Hive.id
+                  operating_system_name: 'android',
+                  operating_system_version: device.version
               )
               Hive.hive_mind.connect(dev['id'])
               Hive.logger.info("HM) Device registered: #{dev}")
