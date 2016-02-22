@@ -37,7 +37,7 @@ module Hive
                 attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
                 to_poll << device['id']
               rescue DeviceAPI::DeviceNotFound => e
-                Hive.logger.warn("HM) Device disconnected before registration (serial: #{device.serial})")
+                Hive.logger.warn("HM) Device disconnected before registration (serial: #{device['serial']})")
               rescue => e
                 Hive.logger.warn("HM) Error with connected device: #{e.message}")
               end
@@ -139,7 +139,7 @@ module Hive
                       'queue_prefix' => @config['queue_prefix']
                     ))
               rescue DeviceAPI::DeviceNotFound
-                Hive.logger.info("Device '#{device.serial}' disconnected during registration")
+                Hive.logger.info("Device '#{device['serial']}' disconnected during registration")
               rescue => e
                 Hive.logger.warn("Error with connected device: #{e.message}")
               end
