@@ -27,8 +27,7 @@ module Hive
             registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized }
             if registered_device.empty?
               # A previously registered device isn't attached
-              Hive.logger.debug("HM) Removing previously registered device - #{device}")
-              Hive.hive_mind.disconnect(device['id'])
+              Hive.logger.debug("HM) A previously registered device has disappeared: #{device}")
             else
               # A previously registered device is attached, poll it
               Hive.logger.debug("HM) Setting #{device} to be polled")
@@ -120,8 +119,7 @@ module Hive
             registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized}
             if registered_device.empty?
               # A previously registered device isn't attached
-              Hive.logger.debug("Removing previously registered device - #{device}")
-              Hive.devicedb('Device').hive_disconnect(device['id'])
+              Hive.logger.debug("HM) A previously registered device has disappeared: #{device}")
             else
               # A previously registered device is attached, poll it
               Hive.logger.debug("#{Time.now} Polling attached device - #{device}")
