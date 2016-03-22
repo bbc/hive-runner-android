@@ -12,19 +12,21 @@ module Hive
         @brand = config['brand'].downcase.gsub(/\s/, '_')
         @os_version = config['os_version']
 
-        Hive.logger.info("Config: #{config.inspect}")
+        # TODO The setting of config['queues'] can be removed when DeviceDB
+        # is no longer being used
         new_queues = calculate_queue_names
         new_queues = new_queues | config['queues'] if config.has_key?('queues')
 
         devicedb_ids = new_queues.map { |queue| find_or_create_queue(queue) }
         Hive.devicedb('Device').edit(@identity, { device_queue_ids: devicedb_ids })
         config['queues'] = new_queues
+
         super
       end
 
       # Uses either DeviceAPI or DeviceDB to generate queue names for a device
+      # TODO Remove when DeviceDB is not being used any more
       def calculate_queue_names
-Hive.logger.info("QUEUE PREFIX; #{@queue_prefix}")
         [
           "#{@queue_prefix}#{self.model}",
           "#{@queue_prefix}#{self.brand}",

@@ -75,6 +75,7 @@ module Hive
 
         else
           Hive.logger.info('HM) No Hive Mind connection')
+          Hive.logger.debug("HM) Error: #{Hive.hive_mind.device_details[:error]}")
           # Hive Mind isn't available, use DeviceAPI instead
           device_info = devices.select { |a| a.status != :unauthorized }.map do |device|
             {
