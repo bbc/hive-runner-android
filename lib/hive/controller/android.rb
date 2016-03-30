@@ -24,7 +24,7 @@ module Hive
           attached_devices = []
           connected_devices.each do |device|
             Hive.logger.debug("HM) Device details: #{device.inspect}")
-            registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized }
+            registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized && a.status != :no_permissions}
             if registered_device.empty?
               # A previously registered device isn't attached
               Hive.logger.debug("HM) A previously registered device has disappeared: #{device}")
@@ -50,7 +50,7 @@ module Hive
           Hive.hive_mind.poll(*to_poll)
 
           # Register new devices
-          devices.select{|a| a.status != :unauthorized}.each do |device|
+          devices.select{|a| a.status != :unauthorized && a.status != :no_permissions}.each do |device|
             begin
               dev = Hive.hive_mind.register(
                   hostname: device.model,
@@ -77,7 +77,7 @@ module Hive
           Hive.logger.info('HM) No Hive Mind connection')
           Hive.logger.debug("HM) Error: #{Hive.hive_mind.device_details[:error]}")
           # Hive Mind isn't available, use DeviceAPI instead
-          device_info = devices.select { |a| a.status != :unauthorized }.map do |device|
+          device_info = devices.select { |a| a.status != :unauthorized && a.status != :no_permissions }.map do |device|
             {
               'id' =>  device.serial,
               'serial' => device.serial,
@@ -117,7 +117,7 @@ module Hive
         if hive_details.is_a? Hash
           # DeviceDB information is available, use it
           hive_details['devices'].select {|a| a['os'] == 'android'}.each do |device|
-            registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized}
+            registered_device = devices.select { |a| a.serial == device['serial'] && a.status != :unauthorized && a.status != :no_permissions }
             if registered_device.empty?
               # A previously registered device isn't attached
               Hive.logger.debug("HM) A previously registered device has disappeared: #{device}")
@@ -153,7 +153,7 @@ module Hive
         else
           # DeviceDB isn't available, use DeviceAPI instead
 
-          device_info = devices.select { |a| a.status != :unauthorized }.map do |device|
+          device_info = devices.select { |a| a.status != :unauthorized && a.status != :no_permissions }.map do |device|
             {
               'id' =>  device.serial,
               'serial' => device.serial,
