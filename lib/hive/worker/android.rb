@@ -20,17 +20,18 @@ module Hive
       attr_accessor :device
 
       def initialize(device)
+        @serial = device['serial']
         @queue_prefix = device['queue_prefix'].to_s == '' ? '' : "#{device['queue_prefix']}-"
         @model = device['model'].downcase.gsub(/\s/, '_')
         @brand = device['brand'].downcase.gsub(/\s/, '_')
         @os_version = device['os_version']
         @worker_ports = PortReserver.new
         begin
-          device.merge!({"device_api" => DeviceAPI::Android.device(device['serial'])})
+          device.merge!({"device_api" => DeviceAPI::Android.device(@serial)})
         rescue DeviceAPI::DeviceNotFound
-          Hive.logger.info("Device '#{device['serial']}' disconnected during initialization")
+          Hive.logger.info("Device '#{@serial}' disconnected during initialization")
         rescue DeviceAPI::UnauthorizedDevice
-          Hive.logger.info("Device '#{device['serial']}' is unauthorized")
+          Hive.logger.info("Device '#{@serial}' is unauthorized")
         rescue DeviceAPI::Android::ADBCommandError
           Hive.logger.info("Device disconnected during worker initialization")
         rescue => e
@@ -123,7 +124,7 @@ module Hive
 
       def hive_mind_device_identifiers
         {
-          serial: @device_id,
+          serial: @serial,
           device_type: 'Mobile'
         }
       end
