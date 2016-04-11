@@ -11,49 +11,7 @@ module Hive
         @model = config['model'].downcase.gsub(/\s/, '_')
         @brand = config['brand'].downcase.gsub(/\s/, '_')
         @os_version = config['os_version']
-
-        # TODO The setting of config['queues'] can be removed when DeviceDB
-        # is no longer being used
-        new_queues = calculate_queue_names
-        new_queues = new_queues | config['queues'] if config.has_key?('queues')
-
-        devicedb_ids = new_queues.map { |queue| find_or_create_queue(queue) }
-        Hive.devicedb('Device').edit(@identity, { device_queue_ids: devicedb_ids })
-        config['queues'] = new_queues
-
         super
-      end
-
-      # Uses either DeviceAPI or DeviceDB to generate queue names for a device
-      # TODO Remove when DeviceDB is not being used any more
-      def calculate_queue_names
-        [
-          "#{@queue_prefix}#{self.model}",
-          "#{@queue_prefix}#{self.brand}",
-          "#{@queue_prefix}android",
-          "#{@queue_prefix}android-#{self.os_version}",
-          "#{@queue_prefix}android-#{self.os_version}-#{self.model}"
-        ]
-      end
-
-      private
-
-      def find_or_create_queue(name)
-        queue = Hive.devicedb('Queue').find_by_name(name)
-
-        return queue.first['id'] unless queue.empty? || queue.is_a?(Hash)
-
-        queue = create_queue(name, "#{name} queue created by Hive Runner")
-        queue['id'] unless queue.empty?
-      end
-
-      def create_queue(name, description)
-        queue_attributes = {
-          name: name,
-          description: description
-        }
-
-        Hive.devicedb('Queue').register(device_queue: queue_attributes)
       end
     end
   end
