@@ -17,7 +17,7 @@ module Hive
   class Worker
     class Android < Worker
 
-      attr_accessor :device, :hive_mind_android
+      attr_accessor :device
 
       def initialize(device)
         @serial = device['serial']
