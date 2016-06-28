@@ -13,7 +13,12 @@ module Hive
 
         if not Hive.hive_mind.device_details.has_key? :error
           # Selecting only android mobiles
-          connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' && d['operating_system_name'] == 'android' }
+          begin
+            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' && d['operating_system_name'] == 'android' }
+          rescue NoMethodError
+            # Failed to find connected devices
+            raise Hive::Controller::DeviceDetectionFailed
+          end
 
           to_poll = []
           attached_devices = []
