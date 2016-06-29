@@ -145,10 +145,4 @@ module Hive
     end
 
   end
-
-  class DeviceError < StandardError
-    def initialize(msg)
-      super(msg)
-    end
-  end
 end
