@@ -22,9 +22,11 @@ module Hive
 
         unless Hive.hive_mind.device_details.has_key?(:error)
           # Selecting only android mobiles
-          connected_devices = Hive.hive_mind.device_details['connected_devices'].select do |d|
-                d['device_type'] == 'Mobile' &&
-                d['operating_system_name'] == 'android'
+          begin
+            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' && d['operating_system_name'] == 'android' }
+          rescue NoMethodError
+            # Failed to find connected devices
+            raise Hive::Controller::DeviceDetectionFailed
           end
         else
           Hive.logger.info('No Hive Mind connection')
