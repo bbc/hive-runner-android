@@ -6,13 +6,16 @@ module Hive
   class Controller
     class Android < Controller
       attr_accessor :devices
+      attr_accessor :attached_devices
 
-      def detect
-        all_attached_devices = get_connected_devices # get all connected devices
-        to_poll = select_devices(all_attached_devices) # select devices to poll
+      def detect(device_type = 'Mobile')
+        # device_type should be either 'Mobile' or 'Tv'
+        @device_type = device_type
+        connected_devices = get_connected_devices # get all connected devices
+        to_poll = select_devices(connected_devices) # select devices to poll
         poll_devices(to_poll) # poll devices
         register_new_devices(devices) # register new devices with Hivemind
-        all_attached_devices
+        @attached_devices
       end
 
       def get_connected_devices
@@ -23,7 +26,7 @@ module Hive
         unless Hive.hive_mind.device_details.has_key?(:error)
           # Selecting only android mobiles
           begin
-            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' && d['operating_system_name'] == 'android' }
+            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == @device_type && d['operating_system_name'] == 'android' }
           rescue NoMethodError
             # Failed to find connected devices
             raise Hive::Controller::DeviceDetectionFailed
@@ -46,21 +49,21 @@ module Hive
             }
           end
 
-          attached_devices = device_info.collect do |physical_device|
+          # attached_devices is either fully set here (if there is no Hivemind connection) 
+          # or in select_devices (if there is a Hivemind connection), not both
+          @attached_devices = device_info.collect do |physical_device|
             self.create_device(physical_device)
           end
         end
 
-        Hive.logger.info(attached_devices)
         connected_devices
       end
 
       def select_devices(connected_devices)
         # select devices that we want to poll
-        attached_devices = []
         to_poll = []
+        @attached_devices = []
         connected_devices.each do |device|
-          Hive.logger.debug("Device details: #{device.inspect}")
           registered_device = @devices.select do |a|
             a.serial == device['serial'] &&
                 a.status != :unauthorized &&
@@ -74,7 +77,7 @@ module Hive
             Hive.logger.debug("Device: #{registered_device.inspect}")
 
             begin
-              attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
+              @attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
               to_poll << device['id']
 
             rescue DeviceAPI::DeviceNotFound => e
