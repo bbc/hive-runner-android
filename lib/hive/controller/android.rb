@@ -63,7 +63,7 @@ module Hive
       def select_devices(connected_devices)
         # select devices that we want to poll
         to_poll = []
-        @attached_devices || []
+        @attached_devices = @attached_devices || []
         connected_devices.each do |device|
           registered_device = @devices.select do |a|
             a.serial == device['serial']
