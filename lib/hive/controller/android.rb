@@ -20,7 +20,11 @@ module Hive
 
       def get_connected_devices
         # get a list of connected devices from Hivemind or DeviceAPI
-        @devices = DeviceAPI::Android.devices
+        @devices = DeviceAPI::Android.devices.select do |a|
+              a.status != :unauthorized &&
+              a.status != :no_permissions
+        end
+
         Hive.logger.debug('No devices attached') if devices.empty?
 
         unless Hive.hive_mind.device_details.has_key?(:error)
@@ -35,10 +39,7 @@ module Hive
           Hive.logger.info('No Hive Mind connection')
           Hive.logger.debug("Error: #{Hive.hive_mind.device_details[:error]}")
           # Hive Mind isn't available, use DeviceAPI instead
-          device_info = @devices.select do |a|
-              a.status != :unauthorized &&
-              a.status != :no_permissions
-            end.map do |device|
+          device_info = @devices.select do |device|
             {
              'id' => device.serial,
              'serial' => device.serial,
@@ -65,9 +66,7 @@ module Hive
         @attached_devices || []
         connected_devices.each do |device|
           registered_device = @devices.select do |a|
-            a.serial == device['serial'] &&
-                a.status != :unauthorized &&
-                a.status != :no_permissions
+            a.serial == device['serial']
           end
 
           if registered_device.empty? # A previously registered device isn't attached
@@ -103,7 +102,7 @@ module Hive
 
       def register_new_devices
         # Register new devices with Hivemind
-        @devices.select { |a| a.status != :unauthorized && a.status != :no_permissions }.each do |device|
+        @devices.each do |device|
           begin
             dev = Hive.hive_mind.register(
                 hostname: device.model,
