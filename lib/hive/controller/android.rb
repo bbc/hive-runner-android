@@ -6,24 +6,31 @@ module Hive
   class Controller
     class Android < Controller
       attr_accessor :devices
+      attr_accessor :attached_devices
 
-      def detect
-        all_attached_devices = get_connected_devices # get all connected devices
-        to_poll = select_devices(all_attached_devices) # select devices to poll
+      def detect(device_type = 'Mobile')
+        # device_type should be either 'Mobile' or 'Tv'
+        @device_type = device_type
+        connected_devices = get_connected_devices # get all connected devices
+        to_poll = select_devices(connected_devices) # select devices to poll
         poll_devices(to_poll) # poll devices
-        register_new_devices(devices) # register new devices with Hivemind
-        all_attached_devices
+        register_new_devices
+        @attached_devices
       end
 
       def get_connected_devices
         # get a list of connected devices from Hivemind or DeviceAPI
-        @devices = DeviceAPI::Android.devices
+        @devices = DeviceAPI::Android.devices.select do |a|
+              a.status != :unauthorized &&
+              a.status != :no_permissions
+        end
+
         Hive.logger.debug('No devices attached') if devices.empty?
 
         unless Hive.hive_mind.device_details.has_key?(:error)
           # Selecting only android mobiles
           begin
-            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == 'Mobile' && d['operating_system_name'] == 'android' }
+            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == @device_type && d['operating_system_name'] == 'android' }
           rescue NoMethodError
             # Failed to find connected devices
             raise Hive::Controller::DeviceDetectionFailed
@@ -32,10 +39,7 @@ module Hive
           Hive.logger.info('No Hive Mind connection')
           Hive.logger.debug("Error: #{Hive.hive_mind.device_details[:error]}")
           # Hive Mind isn't available, use DeviceAPI instead
-          device_info = @devices.select do |a|
-              a.status != :unauthorized &&
-              a.status != :no_permissions
-            end.map do |device|
+          device_info = @devices.select do |device|
             {
              'id' => device.serial,
              'serial' => device.serial,
@@ -46,25 +50,23 @@ module Hive
             }
           end
 
-          attached_devices = device_info.collect do |physical_device|
+          # attached_devices is either fully set here (if there is no Hivemind connection) 
+          # or in select_devices (if there is a Hivemind connection), not both
+          @attached_devices = device_info.collect do |physical_device|
             self.create_device(physical_device)
           end
         end
 
-        Hive.logger.info(attached_devices)
         connected_devices
       end
 
       def select_devices(connected_devices)
         # select devices that we want to poll
-        attached_devices = []
         to_poll = []
+        @attached_devices = @attached_devices || []
         connected_devices.each do |device|
-          Hive.logger.debug("Device details: #{device.inspect}")
           registered_device = @devices.select do |a|
-            a.serial == device['serial'] &&
-                a.status != :unauthorized &&
-                a.status != :no_permissions
+            a.serial == device['serial']
           end
 
           if registered_device.empty? # A previously registered device isn't attached
@@ -74,7 +76,7 @@ module Hive
             Hive.logger.debug("Device: #{registered_device.inspect}")
 
             begin
-              attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
+              @attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
               to_poll << device['id']
 
             rescue DeviceAPI::DeviceNotFound => e
@@ -98,9 +100,9 @@ module Hive
         Hive.hive_mind.poll(*to_poll)
       end
 
-      def register_new_devices(devices)
+      def register_new_devices
         # Register new devices with Hivemind
-        @devices.select { |a| a.status != :unauthorized && a.status != :no_permissions }.each do |device|
+        @devices.each do |device|
           begin
             dev = Hive.hive_mind.register(
                 hostname: device.model,
