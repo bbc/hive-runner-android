@@ -14,7 +14,7 @@ module Hive
         connected_devices = get_connected_devices # get all connected devices
         to_poll = select_devices(connected_devices) # select devices to poll
         poll_devices(to_poll) # poll devices
-        register_new_devices(devices) # register new devices with Hivemind
+        register_new_devices
         @attached_devices
       end
 
@@ -101,7 +101,7 @@ module Hive
         Hive.hive_mind.poll(*to_poll)
       end
 
-      def register_new_devices(devices)
+      def register_new_devices
         # Register new devices with Hivemind
         @devices.select { |a| a.status != :unauthorized && a.status != :no_permissions }.each do |device|
           begin
