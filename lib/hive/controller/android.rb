@@ -10,15 +10,14 @@ module Hive
 
       def detect(device_type = 'Mobile')
         # device_type should be either 'Mobile' or 'Tv'
-        @device_type = device_type
-        connected_devices = get_connected_devices # get all connected devices
+        connected_devices = get_connected_devices(device_type) # get all connected devices
         to_poll = select_devices(connected_devices) # select devices to poll
         poll_devices(to_poll) # poll devices
         register_new_devices
         @attached_devices
       end
 
-      def get_connected_devices
+      def get_connected_devices(device_type)
         # get a list of connected devices from Hivemind or DeviceAPI
         @devices = DeviceAPI::Android.devices.select do |a|
               a.status != :unauthorized &&
@@ -30,7 +29,7 @@ module Hive
         unless Hive.hive_mind.device_details.has_key?(:error)
           # Selecting only android mobiles
           begin
-            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == @device_type && d['operating_system_name'] == 'android' }
+            connected_devices = Hive.hive_mind.device_details['connected_devices'].select{ |d| d['device_type'] == device_type && d['operating_system_name'] == 'android' }
           rescue NoMethodError
             # Failed to find connected devices
             raise Hive::Controller::DeviceDetectionFailed
