@@ -18,6 +18,7 @@ module Hive
       end
 
       def get_connected_devices(device_type)
+        connected_devices = []
         # get a list of connected devices from Hivemind or DeviceAPI
         @devices = DeviceAPI::Android.devices.select do |a|
               a.status != :unauthorized &&
