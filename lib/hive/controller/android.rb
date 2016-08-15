@@ -11,19 +11,24 @@ module Hive
       def detect(device_type = 'Mobile')
         # device_type should be either 'Mobile' or 'Tv'
         connected_devices = get_connected_devices(device_type) # get all connected devices
+      if  !Hive.hive_mind.device_details.has_key?(:error)
         to_poll = select_devices(connected_devices) # select devices to poll
         poll_devices(to_poll) # poll devices
+      end
         register_new_devices
         @attached_devices
       end
 
-      def get_connected_devices(device_type)
-        connected_devices = []
-        # get a list of connected devices from Hivemind or DeviceAPI
+      def get_devices
         @devices = DeviceAPI::Android.devices.select do |a|
               a.status != :unauthorized &&
               a.status != :no_permissions
         end
+      end
+
+      def get_connected_devices(device_type)
+        # get a list of connected devices from Hivemind or DeviceAPI
+        self.get_devices()
 
         Hive.logger.debug('No devices attached') if devices.empty?
 
@@ -35,11 +40,12 @@ module Hive
             # Failed to find connected devices
             raise Hive::Controller::DeviceDetectionFailed
           end
+          connected_devices
         else
           Hive.logger.info('No Hive Mind connection')
           Hive.logger.debug("Error: #{Hive.hive_mind.device_details[:error]}")
           # Hive Mind isn't available, use DeviceAPI instead
-          device_info = @devices.select do |device|
+          device_info = @devices.select.map do |device|
             {
              'id' => device.serial,
              'serial' => device.serial,
@@ -49,15 +55,13 @@ module Hive
              'os_version' => device.version
             }
           end
-
           # attached_devices is either fully set here (if there is no Hivemind connection) 
           # or in select_devices (if there is a Hivemind connection), not both
           @attached_devices = device_info.collect do |physical_device|
             self.create_device(physical_device)
           end
+          @attached_devices
         end
-
-        connected_devices
       end
 
       def select_devices(connected_devices)
@@ -78,7 +82,6 @@ module Hive
             begin
               @attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
               to_poll << device['id']
-
             rescue DeviceAPI::DeviceNotFound => e
               Hive.logger.warn("Device disconnected before registration (serial: #{device['serial']})")
             rescue => e
