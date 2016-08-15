@@ -34,10 +34,6 @@ module Hive
       def get_connected_devices(device_type)
         # get a list of connected devices from Hivemind or DeviceAPI
         self.get_devices()
-        #@devices = DeviceAPI::Android.devices.select do |a|
-        #      a.status != :unauthorized &&
-        #      a.status != :no_permissions
-        #end
 
         Hive.logger.debug('No devices attached') if devices.empty?
 
@@ -71,8 +67,6 @@ module Hive
           end
           @attached_devices
         end
-
- #       connected_devices
       end
 
       def select_devices(connected_devices)
