@@ -12,10 +12,6 @@ module Hive
       def detect(device_type = 'Mobile')
         # device_type should be either 'Mobile' or 'Tv'
         connected_devices = get_connected_devices(device_type) # get all connected devices
-######################
-# Need to fix
-# if Hive mind reconnects here, it is going to poll and it will break
-#####################
       if  !Hive.hive_mind.device_details.has_key?(:error)
         to_poll = select_devices(connected_devices) # select devices to poll
         poll_devices(to_poll) # poll devices
