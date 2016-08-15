@@ -78,6 +78,7 @@ module Hive
           else # A previously registered device is attached, poll it
             Hive.logger.debug("Setting #{device} to be polled")
             Hive.logger.debug("Device: #{registered_device.inspect}")
+
             begin
               @attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
               to_poll << device['id']
@@ -90,6 +91,7 @@ module Hive
             @devices = @devices - registered_device
           end
         end
+
         to_poll
       end
 
