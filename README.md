@@ -1,5 +1,5 @@
 # hive-runner-android
-Android module for Hive Runner
+Android module for Hive Runner - see the [change log](CHANGELOG.md) for release notes
 
 ## Quick start
 Install the hive-runner gem and set up your hive:
