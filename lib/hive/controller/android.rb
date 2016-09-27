@@ -46,16 +46,26 @@ module Hive
           Hive.logger.info('No Hive Mind connection')
           Hive.logger.debug("Error: #{Hive.hive_mind.device_details[:error]}")
           # Hive Mind isn't available, use DeviceAPI instead
+
           device_info = @devices.select.map do |device|
-            {
-             'id' => device.serial,
-             'serial' => device.serial,
-             'status' => 'idle',
-             'model' => device.model,
-             'brand' => device.manufacturer,
-             'os_version' => device.version
-            }
+            begin
+              {
+               'id' => device.serial,
+               'serial' => device.serial,
+               'status' => 'idle',
+               'model' => device.model,
+               'brand' => device.manufacturer,
+               'os_version' => device.version
+              }
+            rescue DeviceAPI::DeviceNotFound => e
+              Hive.logger.warn("Device disconnected before registration (serial: #{device.serial})")
+              nil
+            rescue => e
+              Hive.logger.warn("Error with connected device: #{e.message}")
+              nil
+            end.compact
           end
+
           # attached_devices is either fully set here (if there is no Hivemind connection) 
           # or in select_devices (if there is a Hivemind connection), not both
           @attached_devices = device_info.collect do |physical_device|
@@ -64,6 +74,31 @@ module Hive
           @attached_devices
         end
       end
+
+
+
+          begin
+            dev = Hive.hive_mind.register(
+                hostname: device.model,
+                serial: device.serial,
+                macs: [device.wifi_mac_address],
+                ips: [device.ip_address],
+                brand: device.manufacturer.capitalize,
+                model: device.model,
+                device_type: @device_type,
+                imei: device.imei,
+                operating_system_name: 'android',
+                operating_system_version: device.version
+            )
+            Hive.hive_mind.connect(dev['id'])
+            Hive.logger.info("Device registered: #{dev}")
+          rescue DeviceAPI::DeviceNotFound => e
+            Hive.logger.warn("Device disconnected before registration (serial: #{device.serial})")
+          rescue => e
+            Hive.logger.warn("Error with connected device: #{e.message}")
+          end
+
+
 
       def select_devices(connected_devices)
         # select devices that we want to poll
