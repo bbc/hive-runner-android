@@ -63,8 +63,8 @@ module Hive
             rescue => e
               Hive.logger.warn("Error with connected device: #{e.message}")
               nil
-            end.compact
-          end
+            end
+          end.compact
 
           # attached_devices is either fully set here (if there is no Hivemind connection) 
           # or in select_devices (if there is a Hivemind connection), not both
