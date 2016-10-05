@@ -12,4 +12,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'device_api-android', '~> 1.0'
   s.add_runtime_dependency 'hive-runner', '~> 2.1.1'
   s.add_runtime_dependency 'terminal-table', '>= 1.4'
+  s.add_development_dependency 'rspec', '~> 3.5'
+  s.add_development_dependency 'webmock', '~> 1.22'
 end
