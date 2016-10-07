@@ -8,6 +8,7 @@ module Hive
 
       def initialize
         @device_type ||= 'Mobile'
+        @remote = false if @remote.nil?
         super
       end
 
@@ -66,7 +67,7 @@ module Hive
                 ips: [device.ip_address],
                 brand: device.manufacturer.capitalize,
                 model: device.model,
-                device_type: 'Mobile',
+                device_type: @device_type,
                 imei: device.imei,
                 operating_system_name: 'android',
                 operating_system_version: device.version
@@ -113,7 +114,8 @@ module Hive
       def get_connected_devices
         DeviceAPI::Android.devices.select do |a|
           a.status != :unauthorized &&
-          a.status != :no_permissions
+          a.status != :no_permissions &&
+          a.remote == @remote
         end
       end
 

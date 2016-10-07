@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.files 	    	= Dir['README.md', 'lib/**/*.rb']
   s.homepage  		= 'https://github.com/bbc/hive-runner-android'
   s.license	    	= 'MIT'
-  s.add_runtime_dependency 'device_api-android', '~> 1.0'
+  s.add_runtime_dependency 'device_api-android', '~> 1.0', '>= 1.2.9'
   s.add_runtime_dependency 'hive-runner', '~> 2.1.1'
   s.add_runtime_dependency 'terminal-table', '>= 1.4'
   s.add_development_dependency 'rspec', '~> 3.5'

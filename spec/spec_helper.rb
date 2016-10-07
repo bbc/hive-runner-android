@@ -48,6 +48,7 @@ def adb_device options
   allow(dev).to receive(:imei) { options[:imei] || '123456%d' % id }
   allow(dev).to receive(:version) { options[:os_version] || '1.2.3' }
   allow(dev).to receive(:get_device_type) { :default }
+  allow(dev).to receive(:remote) { options[:remote] ? true : false }
   dev
 end
 

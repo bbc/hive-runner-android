@@ -109,6 +109,47 @@ RSpec.describe Hive::Controller::Android do
 
         expect(controller.detect.count).to eq 6
       end
+
+      it 'detects only Android devices' do
+        # Mock devices
+        hm_list = []
+        adb_list = []
+
+        # Android mobiles recorded in Hive Mind and attached
+        (1..3).each do |i|
+          hm_list << hm_device(id: i)
+          adb_list << adb_device(id: i)
+        end
+
+        (4..8).each do |i|
+          hm_list << hm_device(id: i, os: 'ios')
+        end
+
+        mock_devices id: 96, hm_devices: hm_list, adb_devices: adb_list
+
+        expect(controller.detect.count).to eq 3
+      end
+
+      it 'detects only mobile devices' do
+        # Mock devices
+        hm_list = []
+        adb_list = []
+
+        # Android mobiles recorded in Hive Mind and attached
+        (1..3).each do |i|
+          hm_list << hm_device(id: i)
+          adb_list << adb_device(id: i)
+        end
+
+        (4..8).each do |i|
+          hm_list << hm_device(id: i, device_type: 'Tv')
+          adb_list << adb_device(id: i, remote: true)
+        end
+
+        mock_devices id: 96, hm_devices: hm_list, adb_devices: adb_list
+
+        expect(controller.detect.count).to eq 3
+      end
     end
   end
 
@@ -123,10 +164,28 @@ RSpec.describe Hive::Controller::Android do
       (1..4).each do |i|
         adb_list << adb_device(id: i)
       end
-      mock_devices id: 96, adb_devices: adb_list
+      mock_devices id: 79, adb_devices: adb_list
 
       expect(controller.detect.count).to eq 4
     end
 
+    it 'detects only mobile devices' do
+      # Mock devices
+      hm_list = []
+      adb_list = []
+
+      # Android mobiles recorded in Hive Mind and attached
+      (1..3).each do |i|
+        adb_list << adb_device(id: i)
+      end
+
+      (4..8).each do |i|
+        adb_list << adb_device(id: i, remote: true)
+      end
+
+      mock_devices id: 78, hm_devices: hm_list, adb_devices: adb_list
+
+      expect(controller.detect.count).to eq 3
+    end
   end
 end
