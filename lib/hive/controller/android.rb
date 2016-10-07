@@ -91,7 +91,7 @@ module Hive
         Hive.logger.info('No Hive Mind connection')
         Hive.logger.debug("Error: #{Hive.hive_mind.device_details[:error]}")
         # Hive Mind isn't available, use DeviceAPI instead
-        device_info = connected_devices..map do |device|
+        device_info = connected_devices.map do |device|
           {
             'id' =>  device.serial,
             'serial' => device.serial,
@@ -111,7 +111,7 @@ module Hive
       end
 
       def get_connected_devices
-        DeviceAPI::Android.devices.select do |s|
+        DeviceAPI::Android.devices.select do |a|
           a.status != :unauthorized &&
           a.status != :no_permissions
         end

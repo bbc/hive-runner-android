@@ -1,0 +1,10 @@
+test:
+  logging:
+    directory: /tmp
+    pids: /tmp
+    main_filename: hive_test.log
+    main_level: DEBUG
+    worker_level: DEBUG
+
+  network:
+    hive_mind: http://hivemind
