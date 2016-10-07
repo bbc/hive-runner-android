@@ -84,25 +84,30 @@ RSpec.describe Hive::Controller::Android do
         end
       end
 
-      it 'detects 5 attached devices when Hive Mind registration fails' do
+      it 'detects 6 attached devices when Hive Mind registration fails' do
         # Mock devices
         hm_list = []
         adb_list = []
 
         # Android mobiles recorded in Hive Mind and attached
-        (1..3).each do |i|
+        (1..2).each do |i|
           hm_list << hm_device(id: i)
           adb_list << adb_device(id: i)
         end
 
-        # Android mobiles not recorded in Hive Mind but attached
-        (4..5).each do |i|
+        # Android mobiles recorded in Hive Mind but not attached
+        (3..5).each do |i|
           hm_list << hm_device(id: i)
+        end
+
+        # Android mobiles not recorded in Hive Mind but attached
+        (6..9).each do |i|
+          adb_list << adb_device(id: i)
         end
 
         mock_devices id: 97, hm_devices: hm_list, adb_devices: adb_list, register_fail: true
 
-        expect(controller.detect.count).to eq 3
+        expect(controller.detect.count).to eq 6
       end
     end
   end
