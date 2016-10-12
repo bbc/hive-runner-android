@@ -6,10 +6,10 @@ module Hive
   class Controller
     class Android < Controller
 
-      def initialize
+      def initialize(options)
         @device_type ||= 'Mobile'
         @remote = false if @remote.nil?
-        super
+        super(options)
       end
 
       # Register and poll connected devices
@@ -115,7 +115,7 @@ module Hive
         DeviceAPI::Android.devices.select do |a|
           a.status != :unauthorized &&
           a.status != :no_permissions &&
-          a.remote == @remote
+          a.is_remote? == @remote
         end
       end
 
