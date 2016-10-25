@@ -32,7 +32,11 @@ module Hive
         attached_devices = []
         hivemind_devices.each do |device|
           Hive.logger.debug("Device details: #{device.inspect}")
-          registered_device = connected_devices.select { |a| a.serial == device['serial'] }
+          begin
+            registered_device = connected_devices.select { |a| a.serial == device['serial'] }
+          rescue => e
+            registered_device = ""
+          end
           if registered_device.empty?
             # A previously registered device isn't attached
             Hive.logger.debug("A previously registered device has disappeared: #{device}")
@@ -58,29 +62,35 @@ module Hive
         Hive.hive_mind.poll(*to_poll)
 
         # Register new devices
-        connected_devices.select{|a| a.status != :unauthorized && a.status != :no_permissions}.each do |device|
+        if !connected_devices.empty?
           begin
-            dev = Hive.hive_mind.register(
-                hostname: device.model,
-                serial: device.serial,
-                macs: [device.wifi_mac_address],
-                ips: [device.ip_address],
-                brand: device.manufacturer.capitalize,
-                model: device.model,
-                device_type: @device_type,
-                imei: device.imei,
-                operating_system_name: 'android',
-                operating_system_version: device.version
-            )
-            Hive.hive_mind.connect(dev['id'])
-            Hive.logger.info("Device registered: #{dev}")
-          rescue DeviceAPI::DeviceNotFound => e
-            Hive.logger.warn("Device disconnected before registration (serial: #{device.serial})")
+           connected_devices.select{|a| a.status != :unauthorized && a.status != :no_permissions && a.status != :unknown && a.status != :offline}.each do |device|
+            begin
+             dev = Hive.hive_mind.register(
+                 hostname: device.model,
+                 serial: device.serial,
+                 macs: [device.wifi_mac_address],
+                 ips: [device.ip_address],
+                 brand: device.manufacturer.capitalize,
+                 model: device.model,
+                 device_type: @device_type,
+                 imei: device.imei,
+                 operating_system_name: 'android',
+                 operating_system_version: device.version
+             )
+             Hive.hive_mind.connect(dev['id'])
+             Hive.logger.info("Device registered: #{dev}")
+            rescue DeviceAPI::DeviceNotFound => e
+             Hive.logger.warn("Device disconnected before registration (serial: #{device.serial})")
+            rescue => e
+             Hive.logger.warn("Error with connected device: #{e.message}")
+            end
+           end
           rescue => e
-            Hive.logger.warn("Error with connected device: #{e.message}")
-          end
+           Hive.logger.debug("Connected Devices: #{connected_devices}")
+           Hive.logger.info(e)
+          end 
         end
-
         Hive.logger.info(attached_devices)
         attached_devices
       end
@@ -112,10 +122,18 @@ module Hive
       end
 
       def get_connected_devices
-        DeviceAPI::Android.devices.select do |a|
-          a.status != :unauthorized &&
-          a.status != :no_permissions &&
-          a.is_remote? == @remote
+        begin
+         DeviceAPI::Android.devices.select do |a|
+           a.status != :unauthorized &&
+           a.status != :no_permissions &&
+           a.status != :offline &&
+           a.status != :unknown &&
+           a.is_remote? == @remote
+         end
+        rescue => DeviceAPI::DeviceNotFound
+           Hive.logger.info("Device disconnected while getting list of devices")
+        rescue => e
+           Hive.logger.info("Device has got some issue. Exception => #{e}. Debug and connect device manually")
         end
       end
 
