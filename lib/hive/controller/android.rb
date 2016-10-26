@@ -35,7 +35,7 @@ module Hive
           begin
             registered_device = connected_devices.select { |a| a.serial == device['serial'] }
           rescue => e
-            registered_device = ""
+            registered_device = []
           end
           if registered_device.empty?
             # A previously registered device isn't attached
@@ -133,7 +133,7 @@ module Hive
         rescue => DeviceAPI::DeviceNotFound
            Hive.logger.info("Device disconnected while getting list of devices")
         rescue => e
-           Hive.logger.info("Device has got some issue. Exception => #{e}. Debug and connect device manually")
+           Hive.logger.warn("Device has got some issue. Exception => #{e}. Debug and connect device manually")
         end
       end
 
