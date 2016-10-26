@@ -88,7 +88,7 @@ module Hive
            end
           rescue => e
            Hive.logger.debug("Connected Devices: #{connected_devices}")
-           Hive.logger.info(e)
+           Hive.logger.warn(e)
           end 
         end
         Hive.logger.info(attached_devices)
