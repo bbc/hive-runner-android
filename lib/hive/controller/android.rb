@@ -130,7 +130,7 @@ module Hive
            a.status != :unknown &&
            a.is_remote? == @remote
          end
-        rescue => DeviceAPI::DeviceNotFound
+        rescue DeviceAPI::DeviceNotFound => e
            Hive.logger.info("Device disconnected while getting list of devices")
         rescue => e
            Hive.logger.warn("Device has got some issue. Exception => #{e}. Debug and connect device manually")
