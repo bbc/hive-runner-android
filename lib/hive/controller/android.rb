@@ -54,9 +54,11 @@ module Hive
             end
 
             connected_devices = connected_devices - registered_device
+            connected_devices
           end
         end
-
+require 'pry'
+binding.pry
         # Poll already registered devices
         Hive.logger.debug("Polling: #{to_poll}")
         Hive.hive_mind.poll(*to_poll)
@@ -81,7 +83,7 @@ module Hive
              Hive.hive_mind.connect(dev['id'])
              Hive.logger.info("Device registered: #{dev}")
             rescue DeviceAPI::DeviceNotFound => e
-             Hive.logger.warn("Device disconnected before registration (serial: #{device.serial})")
+             Hive.logger.warn("Device disconnected before registration #{e.message}")
             rescue => e
              Hive.logger.warn("Error with connected device: #{e.message}")
             end
@@ -102,19 +104,25 @@ module Hive
         Hive.logger.info('No Hive Mind connection')
         Hive.logger.debug("Error: #{Hive.hive_mind.device_details[:error]}")
         # Hive Mind isn't available, use DeviceAPI instead
-        device_info = connected_devices.map do |device|
-          {
-            'id' =>  device.serial,
-            'serial' => device.serial,
-            'status' => 'idle',
-            'model' => device.model,
-            'brand' => device.manufacturer,
-            'os_version' => device.version
-          }
-        end
+        begin
+          device_info = connected_devices.map do |device|
+            {
+              'id' =>  device.serial,
+              'serial' => device.serial,
+              'status' => 'idle',
+              'model' => device.model,
+              'brand' => device.manufacturer,
+              'os_version' => device.version
+            }
+          end
 
-        attached_devices = device_info.collect do |physical_device|
-          self.create_device(physical_device)
+          attached_devices = device_info.collect do |physical_device|
+            self.create_device(physical_device)
+          end
+        rescue DeviceAPI::DeviceNotFound => e
+          Hive.logger.warn("Device disconnected while fetching device_info #{e.message}")
+        rescue => e
+          Hive.logger.warn(e)
         end
 
         Hive.logger.info(attached_devices)
