@@ -21,10 +21,10 @@ module Hive
           Hive.logger.info("Rebooting the device")
           begin  
             self.device_api.reboot
-            sleep 30
           rescue
             Hive.logger.error("Device not found")
           end
+          diagnose
         end
 
       end
