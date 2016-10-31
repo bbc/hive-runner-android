@@ -57,8 +57,7 @@ module Hive
             connected_devices
           end
         end
-require 'pry'
-binding.pry
+
         # Poll already registered devices
         Hive.logger.debug("Polling: #{to_poll}")
         Hive.hive_mind.poll(*to_poll)
