@@ -54,7 +54,6 @@ module Hive
             end
 
             connected_devices = connected_devices - registered_device
-            connected_devices
           end
         end
 
