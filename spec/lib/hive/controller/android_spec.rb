@@ -3,7 +3,7 @@ require 'hive/controller/android'
 
 
 RSpec.describe Hive::Controller::Android do
-  let(:controller) { Hive::Controller::Android.new }
+  let(:controller) { Hive::Controller::Android.new({}) }
 
   describe '#detect' do
     context 'with Hive Mind' do
@@ -182,7 +182,6 @@ RSpec.describe Hive::Controller::Android do
       (4..8).each do |i|
         adb_list << adb_device(id: i, remote: true)
       end
-
       mock_devices id: 78, hm_devices: hm_list, adb_devices: adb_list
 
       expect(controller.detect.count).to eq 3

@@ -51,7 +51,7 @@ def adb_device options
   allow(dev).to receive(:imei) { options[:imei] || '123456%d' % id }
   allow(dev).to receive(:version) { options[:os_version] || '1.2.3' }
   allow(dev).to receive(:get_device_type) { :default }
-  allow(dev).to receive(:remote) { options[:remote] ? true : false }
+  dev.instance_variable_set(:@remote, options[:remote] ? true : false)
   dev
 end
 
@@ -91,7 +91,6 @@ def mock_devices options
           with(body: /id%5D=#{options[:id]}/).
           to_return(:status => 200, :body => {connected_devices: options[:hm_devices]}.to_json, :headers => {})
     end
-
     allow(DeviceAPI::Android).to receive(:devices) { options[:adb_devices] }
 end
 
