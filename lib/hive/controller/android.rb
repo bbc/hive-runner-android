@@ -42,9 +42,21 @@ module Hive
             Hive.logger.debug("A previously registered device has disappeared: #{device}")
           else
             # A previously registered device is attached, poll it
-            Hive.logger.debug("Setting #{device} to be polled")
+
+            Hive.logger.debug("Setting #{device['name']} to be polled")
             Hive.logger.debug("Device: #{registered_device.inspect}")
             begin
+              Hive.logger.debug("#{device['name']} OS version: #{registered_device[0].version}")
+              # Check OS version and update if necessary
+              if device['operating_system_version'] != registered_device[0].version
+                Hive.logger.info("Updating OS version of #{device['name']} from #{device['operating_system_version']} to #{registered_device[0].version}")
+                Hive.hive_mind.register(
+                  id: device['id'],
+                  operating_system_name: 'android',
+                  operating_system_version: registered_device[0].version
+                )
+              end
+
               attached_devices << self.create_device(device.merge('os_version' => registered_device[0].version))
               to_poll << device['id']
             rescue DeviceAPI::DeviceNotFound => e
