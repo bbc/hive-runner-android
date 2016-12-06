@@ -19,8 +19,9 @@ module Hive
             else
                result = self.fail("Actual #{c}: is #{battery_info[c]} which is above threshold")
             end
-          rescue
-            result = self.fail("Incorrect parameter #{c} specified. Battery Parameter can be any of #{battery_info.keys}")                
+          rescue => e
+            Hive.logger.error "Incorrect battery parameter => #{e}"                
+            result = self.fail("Incorrect parameter #{c} specified. Battery Parameter can be any of #{battery_info.keys}") 
           end
         end
       end
@@ -28,6 +29,7 @@ module Hive
       def repair(result)
         result = self.fail("Battery temperature above threshold.", "battery")
       end
+
     end
     end
   end
