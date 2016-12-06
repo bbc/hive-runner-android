@@ -20,8 +20,7 @@ module Hive
                result = self.fail("Actual #{c}: is #{battery_info[c]} which is above threshold")
             end
           rescue
-            result = self.fail("Incorrect parameter specified. Battery Parameter can be any of #{battery_info.keys}")                
-            raise InvalidParameterError.new("Invalid Parameter for battery.  Battery Parameter can be any of #{battery_info.keys}") 
+            result = self.fail("Incorrect parameter #{c} specified. Battery Parameter can be any of #{battery_info.keys}")                
           end
         end
       end
