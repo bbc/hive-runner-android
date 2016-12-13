@@ -14,7 +14,7 @@ module Hive
               self.fail("Reboot required", data)
             end
           else
-            data[:reboot] = "Not configured"
+            data[:reboot] = {:value => "Not configured for reboot. Set in config {:reboot_timeout => '2400'}"}
             self.pass("Not configured for reboot", data)
           end
         end
