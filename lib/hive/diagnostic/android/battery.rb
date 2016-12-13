@@ -39,7 +39,7 @@ module Hive
       end
 
       def repair(result)
-        self.fail("Battery temperature above threshold.", "Battery")
+        self.fail("Unplug device from hive", "Battery")
       end
 
     end

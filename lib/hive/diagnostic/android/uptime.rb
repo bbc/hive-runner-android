@@ -23,7 +23,7 @@ module Hive
           data = {}
           Hive.logger.info("Rebooting the device")
           begin  
-#            self.device_api.reboot
+            self.device_api.reboot
             data[:last_rebooted] = {:value => Time.now}
           rescue
             Hive.logger.error("Device not found")
