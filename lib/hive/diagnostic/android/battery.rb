@@ -7,6 +7,13 @@ module Hive
       def battery
         self.device_api.battery_info
       end
+
+      def units
+        {
+          :temperature => "K",
+          :voltage => "mV"
+        }
+      end
       
       def diagnose
         data = {}
@@ -15,12 +22,8 @@ module Hive
         config.keys.each do |c| 
         raise InvalidParameterError.new("Battery Parameter should be any of #{battery_info.keys}") if !battery_info.has_key? c
           begin
-            if battery_info[c].to_i < config[c].to_i
-              data[:"#{c}"] = battery_info[c]
-            else
-              data[:"#{c}"] = battery_info[c] 
-              result = "fail"
-            end
+            data[:"#{c}"] = { :value => battery_info[c], :unit => units[:"#{c}"] }
+            result = "fail" if battery_info[c].to_i > config[c].to_i
           rescue => e
             Hive.logger.error "Incorrect battery parameter => #{e}"                
             return self.fail("Incorrect parameter #{c} specified. Battery Parameter can be any of #{battery_info.keys}", "Battery") 
