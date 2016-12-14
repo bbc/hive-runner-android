@@ -7,31 +7,41 @@ module Hive
       def battery
         self.device_api.battery_info
       end
+
+      def units
+        {
+          :temperature => "K",
+          :voltage => "mV"
+        }
+      end
       
       def diagnose
-        result = nil
+        data = {}
         battery_info = battery
-        begin
-          if config != nil && config.keys.count != 0  
-            temperature = battery_info['temperature']
-            if temperature.to_i < config['temperature'].to_i
-              result = self.pass("Temperature: #{temperature}\n Battery status: OK", "battery")
-            else
-              result = self.fail("Battery temperature above threshold. Temperature: #{temperature} ", "battery")
-            end
-          else
-            result = self.pass("No parameter specified for battery", "battery")
+        result = "pass"
+        config.keys.each do |c| 
+        raise InvalidParameterError.new("Battery Parameter should be any of #{battery_info.keys}") if !battery_info.has_key? c
+          begin
+            data[:"#{c}"] = { :value => battery_info[c], :unit => units[:"#{c}"] }
+            result = "fail" if battery_info[c].to_i > config[c].to_i
+          rescue => e
+            Hive.logger.error "Incorrect battery parameter => #{e}"                
+            return self.fail("Incorrect parameter #{c} specified. Battery Parameter can be any of #{battery_info.keys}", "Battery") 
           end
-        rescue
-          Hive.logger.error("Invalid Battery Parameter")
-          raise InvalidParameterError.new("Invalid Parameter for battery") if !result
         end
-        result
+
+        if result != "fail"
+          self.pass("Battery", data)
+        else
+          self.fail("Battery", data)
+        end
+ 
       end
 
       def repair(result)
-        result = self.fail("Battery temperature above threshold.", "battery")
+        self.fail("Unplug device from hive", "Battery")
       end
+
     end
     end
   end
