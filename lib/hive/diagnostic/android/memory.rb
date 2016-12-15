@@ -32,7 +32,7 @@ module Hive
 
         def repair(result)
           # Add repair for memory
-          self.fail("Cannot repair memory", "memory")
+          self.fail("Cannot repair memory")
         end
 
       end
