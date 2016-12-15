@@ -10,44 +10,38 @@ module Hive
       end
 
       def diagnose
-        result = nil
+        result = "pass"
         wifi_status = wifi
+        data = {}
+        data[:access_point] = {:value => "#{wifi_status[:"#{key}"]}"}
 
         if wifi_status[:access_point].capitalize == "Xxxx"
-          result = self.pass("Kindle returns wifi 'xxxx'", "wifi")
+          result = self.pass("Kindle returns wifi 'xxxx'", data)
           return result
         end
 
         config.each do |key, value|
-          if config != nil && config.keys.count != 0
-            begin
-              if wifi_status[:"#{key}"].capitalize == value.capitalize 
-                result = self.pass("#{key.capitalize} : #{wifi_status[:"#{key}"]}", "wifi" )
-              else
-                result = self.fail(" Error: #{key.capitalize} : #{wifi_status[:"#{key}"]} ", "wifi")
-                break
-              end
-            rescue 
-              Hive.logger.error("Invalid Parameter for Wifi #{key}")
-              raise InvalidParameter.new("Invalid Wifi Parameter for Wifi: #{key}") if !result
-            end
-          else
-            result = self.pass("No parameter specified", "wifi")
-          end
+            result = "fail" if wifi_status[:"#{key}"].capitalize != value.capitalize 
         end
-        result
+        
+        if result == "pass" 
+          self.pass("#{key.capitalize} : #{wifi_status[:"#{key}"]}", data )
+        else
+          self.fail("#{key.capitalize} : #{wifi_status[:"#{key}"]}", data )
+        end
       end 
 
       def repair(result)
-        Hive.logger.info("Trying to repair wifi")
-        options = {:apk => '/path/to/apk/to/toggle/wifi', :package => '/pkg/name/ex: com.wifi.togglewifi'} 
+        Hive.logger.info("Start wifi setting and select first access point")
         begin
-          self.device_api.install(options[:apk])
-          self.device_api.start_intent("-n com.wifi.togglewifi/.MainActivity -e wifi true")
-          sleep 5 
-          self.device_api.uninstall(options[:package])
+          self.device_api.intent("start -a android.intent.action.MAIN -n com.android.settings/.wifi.WifiSettings")
+          # Select first access point available in list
+          system("adb -s #{@serial} shell input keyevent 20") 
+          system("adb -s #{@serial} shell input keyevent 23")
+          # Press home button
+          system("adb -s #{@serial} shell input keyevent 3")
         rescue
-          Hive.logger.error("Unable to fix wifi issue")
+          Hive.logger.error("Unable to resolve wifi issue")
         end
         diagnose
       end
