@@ -22,9 +22,10 @@ module Hive
         def repair(result)
           data = {}
           Hive.logger.info("Rebooting the device")
-          begin  
-            self.device_api.reboot
+          begin
             data[:last_rebooted] = {:value => Time.now}
+            self.pass("Reboot", data)
+            self.device_api.reboot
           rescue
             Hive.logger.error("Device not found")
           end
