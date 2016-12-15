@@ -10,7 +10,7 @@ module Hive
 
       def units
         {
-          :temperature => "K",
+          :temperature => "ºC",
           :voltage => "mV"
         }
       end
@@ -22,6 +22,7 @@ module Hive
         config.keys.each do |c| 
         raise InvalidParameterError.new("Battery Parameter should be any of #{battery_info.keys}") if !battery_info.has_key? c
           begin
+            battery_info[c] = battery_info[c].to_i/10 if c == "temperature"
             data[:"#{c}"] = { :value => battery_info[c], :unit => units[:"#{c}"] }
             result = "fail" if battery_info[c].to_i > config[c].to_i
           rescue => e
