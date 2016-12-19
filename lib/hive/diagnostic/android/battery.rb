@@ -40,7 +40,7 @@ module Hive
       end
 
       def repair(result)
-        self.fail("Unplug device from hive", "Battery")
+        self.fail("Unplug device from hive")
       end
 
     end
