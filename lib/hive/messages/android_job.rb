@@ -8,7 +8,7 @@ module Hive
       end
 
       def resign
-        self.target.symbolize_keys[:resign] == 1
+        self.target.symbolize_keys[:resign] != 0
       end
     end
   end
