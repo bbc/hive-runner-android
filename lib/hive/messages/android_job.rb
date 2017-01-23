@@ -6,6 +6,10 @@ module Hive
       def build
         self.target.symbolize_keys[:build]
       end
+
+      def resign
+        self.target.symbolize_keys[:resign] == 1
+      end
     end
   end
 end
