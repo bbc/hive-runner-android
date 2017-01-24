@@ -65,8 +65,13 @@ module Hive
 
         script.set_env "APK_PATH", apk_path
         if job.build
+          @log.debug("Fetching build")
           file_system.fetch_build(job.build, apk_path)
-          DeviceAPI::Android::Signing.sign_apk({apk: apk_path, resign: true})
+          @log.debug("Re-signing APK: #{job.resign}")
+          if job.resign
+            DeviceAPI::Android::Signing.sign_apk({apk: apk_path, resign: true})
+            @log.debug("Signing done")
+          end
         end
 
         DeviceAPI::Android.device(device['serial']).unlock
