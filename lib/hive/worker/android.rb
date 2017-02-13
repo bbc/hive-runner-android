@@ -76,6 +76,13 @@ module Hive
 
         DeviceAPI::Android.device(device['serial']).unlock
 
+        script.run_loop_check_time = 10
+        script.run_loop_check_method = lambda {
+          DeviceAPI::Android.device(device['serial']).screenshot(
+            filename: "#{@file_system.results_path}/run_loop_screenshot.#{Time.now.strftime('%y%m%d%H%M%S')}.png"
+          )
+        }
+
         "#{self.device['serial']} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
 
