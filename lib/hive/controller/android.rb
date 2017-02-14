@@ -109,6 +109,7 @@ module Hive
 
       def detect_without_hivemind
         connected_devices = get_connected_devices
+        attached_devices = []
         Hive.logger.debug('No devices attached') if connected_devices.empty?
 
         Hive.logger.info('No Hive Mind connection')
