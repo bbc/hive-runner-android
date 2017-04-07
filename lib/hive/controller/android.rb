@@ -120,6 +120,7 @@ module Hive
             {
               'id' =>  device.serial,
               'serial' => device.serial,
+              'qualifier' => device.qualifier,
               'status' => 'idle',
               'model' => device.model,
               'brand' => device.manufacturer,

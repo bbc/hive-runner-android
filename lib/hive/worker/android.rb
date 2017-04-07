@@ -21,17 +21,18 @@ module Hive
 
       def initialize(device)
         @serial = device['serial']
+        @qualifier = device['qualifier']
         @queue_prefix = device['queue_prefix'].to_s == '' ? '' : "#{device['queue_prefix']}-"
         @model = device['model'].downcase.gsub(/\s/, '_')
         @brand = device['brand'].downcase.gsub(/\s/, '_')
         @os_version = device['os_version']
         @worker_ports = PortReserver.new
         begin
-          device.merge!({"device_api" => DeviceAPI::Android.device(@serial)})
+          device.merge!({"device_api" => DeviceAPI::Android.device(@qualifier)})
         rescue DeviceAPI::DeviceNotFound
-          Hive.logger.info("Device '#{@serial}' disconnected during initialization")
+          Hive.logger.info("Device '#{@qualifier}' disconnected during initialization")
         rescue DeviceAPI::UnauthorizedDevice
-          Hive.logger.info("Device '#{@serial}' is unauthorized")
+          Hive.logger.info("Device '#{@qualifier}' is unauthorized")
         rescue DeviceAPI::Android::ADBCommandError
           Hive.logger.info("Device disconnected during worker initialization")
         rescue => e
@@ -58,7 +59,7 @@ module Hive
         script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { @port_allocator.allocate_port }
         script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { @port_allocator.allocate_port }
 
-        script.set_env 'ADB_DEVICE_ARG', self.device['serial']
+        script.set_env 'ADB_DEVICE_ARG', self.device['qualifier']
 
         FileUtils.mkdir(file_system.home_path + '/build')
         apk_path = file_system.home_path + '/build/' + 'build.apk'
@@ -74,9 +75,9 @@ module Hive
           end
         end
 
-        DeviceAPI::Android.device(device['serial']).unlock
+        DeviceAPI::Android.device(device['qualifier']).unlock
 
-        "#{self.device['serial']} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
+        "#{self.device['qualifier']} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
 
       def job_message_klass
