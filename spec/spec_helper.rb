@@ -29,7 +29,7 @@ def hm_device options
     id: id,
     device_type: options[:device_type] || 'Mobile',
     operating_system_name: options[:os] || 'android',
-    version: options[:os_version] || '1,2,3',
+    operating_system_version: options[:os_version] || '1.2.3',
     serial: "serial#{id}",
     model: options[:model] || 'Test Model',
     brand: options[:brand] || 'Test Brand',
@@ -85,14 +85,13 @@ def mock_devices options
           to_return(:status => 200, :body => {id: options[:id], connected_devices: options[:hm_devices]}.to_json, :headers => {})
 
       stub_request(:put, "http://hivemind/api/devices/poll.json").
+          with(body: /%5Bdevice_id%5D=#{options[:id]}/).
           to_return(:status => 200, :body => "{}", :headers => {})
 
       stub_request(:put, "http://hivemind/api/devices/update_state.json").
+          with(body: /%5Bdevice_id%5D=#{options[:id]}/).
           to_return(:status => 200, :body => "{}", :headers => {})
  
-      stub_request(:post, "http://hivemind/api/devices/register.json").
-          to_return(:status => 200, :body => {id: options[:id], connected_devices: options[:hm_devices]}.to_json, :headers => {})
-
     end
 
     if options[:poll_fail]
@@ -114,5 +113,27 @@ RSpec.configure do |config|
 
     stub_request(:put, "http://hivemind/api/plugin/hive/connect.json").
          to_return(:status => 200, :body => "{}", :headers => {})
+  end
+end
+
+
+require 'hive/log'
+module Hive
+  class Log
+    def info(msg)
+    end
+    def warn(msg)
+    end
+    def debug(msg)
+    end
+    def fatal(msg)
+    end
+    def unknown(msg)
+    end
+    def error(msg)
+    end
+    def clear(msg)
+    end
+    
   end
 end
