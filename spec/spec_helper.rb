@@ -29,7 +29,7 @@ def hm_device options
     id: id,
     device_type: options[:device_type] || 'Mobile',
     operating_system_name: options[:os] || 'android',
-    version: options[:os_version] || '1,2,3',
+    operating_system_version: options[:os_version] || '1.2.3',
     serial: "serial#{id}",
     model: options[:model] || 'Test Model',
     brand: options[:brand] || 'Test Brand',
@@ -73,6 +73,9 @@ def mock_devices options
     allow(Mac).to receive(:addrs) { [mac] }
 
     if options[:register_fail]
+      stub_request(:put, "http://hivemind/api/devices/update_state.json").
+          to_return(:status => 500, :body => "{}", :headers => {})
+
       stub_request(:post, "http://hivemind/api/devices/register.json").
           with(body: /%5Bmacs%5D%5B%5D=#{escaped_mac}/).
           to_return(:status => 500, :body => '', :headers => {})
@@ -80,12 +83,21 @@ def mock_devices options
       stub_request(:post, "http://hivemind/api/devices/register.json").
           with(body: /%5Bmacs%5D%5B%5D=#{escaped_mac}/).
           to_return(:status => 200, :body => {id: options[:id], connected_devices: options[:hm_devices]}.to_json, :headers => {})
+
+      stub_request(:put, "http://hivemind/api/devices/poll.json").
+          with(body: /%5Bdevice_id%5D=#{options[:id]}/).
+          to_return(:status => 200, :body => "{}", :headers => {})
+
+      stub_request(:put, "http://hivemind/api/devices/update_state.json").
+          with(body: /%5Bdevice_id%5D=#{options[:id]}/).
+          to_return(:status => 200, :body => "{}", :headers => {})
+ 
     end
 
     if options[:poll_fail]
       stub_request(:put, "http://hivemind/api/devices/poll.json").
           with(body: /id%5D=#{options[:id]}/).
-          to_return(:status => 500, :body => '', :headers => {})
+          to_return(:status => 500, :body => '{}', :headers => {})
     else
       stub_request(:put, "http://hivemind/api/devices/poll.json").
           with(body: /id%5D=#{options[:id]}/).
@@ -97,9 +109,31 @@ end
 RSpec.configure do |config|
   config.before(:each) do
     stub_request(:post, "http://hivemind/api/device_statistics/upload.json").
-         to_return(:status => 200, :body => "", :headers => {})
+         to_return(:status => 200, :body => "{}", :headers => {})
 
     stub_request(:put, "http://hivemind/api/plugin/hive/connect.json").
-         to_return(:status => 200, :body => "", :headers => {})
+         to_return(:status => 200, :body => "{}", :headers => {})
+  end
+end
+
+
+require 'hive/log'
+module Hive
+  class Log
+    def info(msg)
+    end
+    def warn(msg)
+    end
+    def debug(msg)
+    end
+    def fatal(msg)
+    end
+    def unknown(msg)
+    end
+    def error(msg)
+    end
+    def clear(msg)
+    end
+    
   end
 end
