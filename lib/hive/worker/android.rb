@@ -21,7 +21,7 @@ module Hive
 
       def initialize(device)
         @serial = device['serial']
-        @qualifier = device['qualifier']
+        @qualifier ||= device['serial'] 
         @queue_prefix = device['queue_prefix'].to_s == '' ? '' : "#{device['queue_prefix']}-"
         @model = device['model'].downcase.gsub(/\s/, '_')
         @brand = device['brand'].downcase.gsub(/\s/, '_')
