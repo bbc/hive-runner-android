@@ -21,7 +21,7 @@ module Hive
 
       def initialize(device)
         @serial = device['serial']
-        @qualifier = device['qualifier']
+        @qualifier ||= device['serial'] 
         @queue_prefix = device['queue_prefix'].to_s == '' ? '' : "#{device['queue_prefix']}-"
         @model = device['model'].downcase.gsub(/\s/, '_')
         @brand = device['brand'].downcase.gsub(/\s/, '_')
@@ -59,7 +59,7 @@ module Hive
         script.set_env "BOOTSTRAP_PORT",      @worker_ports.reserve(queue_name: 'Bootstrap') { @port_allocator.allocate_port }
         script.set_env "CHROMEDRIVER_PORT",   @worker_ports.reserve(queue_name: 'Chromedriver') { @port_allocator.allocate_port }
 
-        script.set_env 'ADB_DEVICE_ARG', self.device['qualifier']
+        script.set_env 'ADB_DEVICE_ARG', @qualifier
 
         FileUtils.mkdir(file_system.home_path + '/build')
         apk_path = file_system.home_path + '/build/' + 'build.apk'
@@ -75,9 +75,9 @@ module Hive
           end
         end
 
-        DeviceAPI::Android.device(device['qualifier']).unlock
+        DeviceAPI::Android.device(@qualifier).unlock
 
-        "#{self.device['qualifier']} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
+        "#{@qualifier} #{@worker_ports.ports['Appium']} #{apk_path} #{file_system.results_path}"
       end
 
       def job_message_klass
