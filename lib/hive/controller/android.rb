@@ -14,7 +14,16 @@ module Hive
 
       # Register and poll connected devices
       def detect
-        if Hive.hive_mind.device_details.has_key? :error
+        @error = Hive.hive_mind.device_details.has_key? :error
+        retry_poll = 0
+        while @error != false || retry_poll == 4
+          Hive.logger.info("Trying device details again ... ")
+          @error = Hive.hive_mind.device_details.has_key? :error
+          sleep 5
+          retry_poll += 1
+        end
+
+        if @error
           detect_without_hivemind
         else
           detect_with_hivemind
